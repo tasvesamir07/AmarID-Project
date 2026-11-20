@@ -51,7 +51,6 @@ databases:
     databaseName: amarid
     user: amarid
 
-  # Free Redis on Render
+  # Free Redis / Key-Value on Render
   - name: amarid-redis
     plan: free
-    maxmemoryPolicy: allkeys-lru
