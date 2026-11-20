@@ -75,12 +75,13 @@ export default function Onboarding() {
   const setupToken = useRef<string>("");
   const [finalResult, setFinalResult] = useState<FinalizeResult | null>(null);
 
-  // Step 1 — Document
-  const [docType, setDocType] = useState<"NID" | "BIRTH_CERT">("NID");
+  // Step 1 — Document & Citizen Details
+  const [docType, setDocType] = useState<"NID" | "BIRTH_CERT" | "PASSPORT">("NID");
   const [docNumber, setDocNumber] = useState("");
   const [docUploaded, setDocUploaded] = useState(false);
   const [phone, setPhone] = useState(""); // collected here for step 2 start call
   const [fullName, setFullName] = useState("");
+  const [dob, setDob] = useState("");
 
   // Step 2 — SIM OTP
   const [simChallenge, setSimChallenge] = useState<OtpRequestResult | null>(null);
@@ -117,6 +118,18 @@ export default function Onboarding() {
   }, [simChallenge]);
 
   // ─── Step handlers ────────────────────────────────────────────────────────
+
+  function persistProfile(uid?: string, maskedUid?: string) {
+    if (typeof window === "undefined") return;
+    if (fullName.trim()) localStorage.setItem("amarid-profile-name", fullName.trim());
+    if (dob) localStorage.setItem("amarid-profile-dob", dob);
+    if (phone) localStorage.setItem("amarid-profile-phone", "+880 " + phone.replace(/\D/g, ""));
+    if (email.trim()) localStorage.setItem("amarid-profile-email", email.trim());
+    if (docType) localStorage.setItem("amarid-profile-doctype", docType);
+    if (docNumber.trim()) localStorage.setItem("amarid-profile-docnum", docNumber.trim());
+    if (uid) localStorage.setItem("amarid-profile-aid", uid);
+    if (maskedUid) localStorage.setItem("amarid-profile-masked-aid", maskedUid);
+  }
 
   async function startEnrollment() {
     clearError();
@@ -260,6 +273,7 @@ export default function Onboarding() {
       const result = await enrollmentFinalize(enrollmentId.current);
       setFinalResult(result);
       setupToken.current = result.setupToken;
+      persistProfile(result.universalId, result.maskedId);
       setDedupDone(true);
       // After a short delay, advance to passkey registration
       setTimeout(() => setStep(7), 1500);
@@ -284,7 +298,8 @@ export default function Onboarding() {
       const { startRegistration } = await import("@/lib/webauthn");
       const response = await startRegistration({ optionsJSON: opts });
       const reg = await passkeyRegister({ setupToken: setupToken.current, response });
-      // Set auth context
+      // Set auth context & persist
+      persistProfile(finalResult?.universalId, finalResult?.maskedId);
       if (finalResult) {
         setAuth(reg.identityId, finalResult.universalId);
       }
@@ -404,102 +419,203 @@ export default function Onboarding() {
           </Card>
         )}
 
-        {/* ── STEP 1: Document + phone collect ── */}
+        {/* ── STEP 1: Document + citizen details ── */}
         {step === 1 && (() => {
-          // Validation logic
+          // Validation logic for 3 document types
+          let isValid = false;
+          let isInvalid = false;
+          let docLabel = "NID Card Number";
+          let docHint = "Must be exactly 10 or 17 digits";
+          let docPlaceholder = "e.g. 1982736450 (10 digits)";
           const digits = docNumber.replace(/\D/g, "");
-          const validLengths = docType === "NID" ? [10, 17] : [13, 17];
-          const isValid = digits.length > 0 && validLengths.includes(digits.length);
-          const isInvalid = digits.length > 0 && !validLengths.includes(digits.length);
-          const docLabel = docType === "NID" ? "NID Card Number" : "Birth Certificate Number";
-          const docHint  = docType === "NID"
-            ? "Must be exactly 10 or 17 digits"
-            : "Must be exactly 13 or 17 digits";
-          const docPlaceholder = docType === "NID" ? "e.g. 1982736450 (10 digits)" : "e.g. 2000123456789 (13 digits)";
+          const rawDoc = docNumber.trim();
 
-          const canSubmit = fullName.trim().length >= 2 && isValid && docUploaded && phone.length >= 9;
+          if (docType === "NID") {
+            docLabel = "Smart NID Card Number";
+            docHint = "Must be exactly 10 or 17 digits";
+            docPlaceholder = "e.g. 1982736450 (10 digits) or 19901234567890123 (17 digits)";
+            isValid = digits.length > 0 && (digits.length === 10 || digits.length === 17);
+            isInvalid = digits.length > 0 && !isValid;
+          } else if (docType === "BIRTH_CERT") {
+            docLabel = "Birth Certificate Number (BRN)";
+            docHint = "Must be exactly 13 or 17 digits";
+            docPlaceholder = "e.g. 2001123456789 (13 digits) or 20011234567890123 (17 digits)";
+            isValid = digits.length > 0 && (digits.length === 13 || digits.length === 17);
+            isInvalid = digits.length > 0 && !isValid;
+          } else if (docType === "PASSPORT") {
+            docLabel = "Bangladesh Passport Number";
+            docHint = "Must be 8 or 9 alphanumeric characters (e.g. A01234567)";
+            docPlaceholder = "e.g. A01234567 or EA0123456";
+            const passportRegex = /^[A-Z0-9]{8,9}$/i;
+            isValid = passportRegex.test(rawDoc);
+            isInvalid = rawDoc.length > 0 && !isValid;
+          }
+
+          // Age calculation from DOB
+          const calculateAge = (d: string) => {
+            if (!d) return null;
+            const b = new Date(d);
+            if (isNaN(b.getTime())) return null;
+            const today = new Date();
+            let a = today.getFullYear() - b.getFullYear();
+            const m = today.getMonth() - b.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < b.getDate())) a--;
+            return a;
+          };
+          const age = calculateAge(dob);
+
+          const canSubmit =
+            fullName.trim().length >= 2 &&
+            dob.length > 0 &&
+            (age !== null && age >= 0 && age < 125) &&
+            isValid &&
+            docUploaded &&
+            phone.replace(/\D/g, "").length >= 9;
 
           return (
           <Card className="w-full border border-border shadow-xl p-6 sm:p-8 space-y-5">
             <div>
-              <CardTitle className="text-xl font-bold">1. Identity Document</CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">We read it once for verification and never keep the image.</p>
+              <CardTitle className="text-xl font-bold">1. Citizen Identity Enrollment</CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter your legal information as recorded on official national databases.
+              </p>
             </div>
 
             {/* Full Name */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-foreground">Full Name (as on document)</label>
+              <label className="text-xs font-semibold text-foreground">
+                Full Name (as per document) <span className="text-destructive">*</span>
+              </label>
               <Input
                 placeholder="e.g. Mohammad Rahman"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
               />
               {fullName.trim().length > 0 && fullName.trim().length < 2 && (
-                <p className="text-[11px] text-red-500">Name must be at least 2 characters</p>
+                <p className="text-[11px] text-destructive">Name must be at least 2 characters</p>
               )}
             </div>
 
-            {/* Doc type toggle */}
-            <div className="grid grid-cols-2 gap-3">
-              {([
-                { key: "NID",        label: "Smart NID Card",        sub: "10 or 17 digit number" },
-                { key: "BIRTH_CERT", label: "Birth Certificate",     sub: "13 or 17 digit number" },
-              ] as const).map((t) => (
-                <button
-                  key={t.key}
-                  type="button"
-                  onClick={() => { setDocType(t.key); setDocNumber(""); }}
-                  className={`p-4 rounded-xl border text-left transition-all ${docType === t.key ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-secondary"}`}
-                >
-                  <div className="font-semibold text-sm text-foreground">{t.label}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{t.sub}</div>
-                </button>
-              ))}
+            {/* Date of Birth */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-foreground">
+                Date of Birth <span className="text-destructive">*</span>
+              </label>
+              <Input
+                type="date"
+                value={dob}
+                max={new Date().toISOString().split("T")[0]}
+                min="1910-01-01"
+                onChange={(e) => setDob(e.target.value)}
+                className="font-mono text-sm"
+              />
+              {age !== null && age >= 18 && (
+                <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                  <span>✓</span> Age: {age} years (Adult Citizen — LOA3 eligible)
+                </p>
+              )}
+              {age !== null && age >= 0 && age < 18 && (
+                <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
+                  <span>ℹ</span> Age: {age} years (Minor Citizen — Parental consent applicable)
+                </p>
+              )}
+            </div>
+
+            {/* Document Type Selector (3 options) */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">Select Identity Document</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { key: "NID", label: "Smart NID", sub: "10 or 17 digits" },
+                  { key: "BIRTH_CERT", label: "Birth Cert", sub: "13 or 17 digits" },
+                  { key: "PASSPORT", label: "Passport", sub: "8-9 chars" },
+                ].map((t) => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => {
+                      setDocType(t.key as any);
+                      setDocNumber("");
+                    }}
+                    className={`p-3 rounded-xl border text-left transition-all ${
+                      docType === t.key
+                        ? "border-primary bg-primary/10 ring-1 ring-primary font-bold"
+                        : "border-border hover:bg-secondary/60 text-muted-foreground"
+                    }`}
+                  >
+                    <div className="text-xs font-bold text-foreground">{t.label}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">{t.sub}</div>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Document number with live validation */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-foreground">{docLabel}</label>
+              <label className="text-xs font-semibold text-foreground">
+                {docLabel} <span className="text-destructive">*</span>
+              </label>
               <div className="relative">
                 <Input
                   placeholder={docPlaceholder}
                   value={docNumber}
-                  onChange={(e) => setDocNumber(e.target.value.replace(/\D/g, ""))}
-                  inputMode="numeric"
-                  maxLength={17}
+                  onChange={(e) => {
+                    const val = docType === "PASSPORT"
+                      ? e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "")
+                      : e.target.value.replace(/\D/g, "");
+                    setDocNumber(val);
+                  }}
+                  inputMode={docType === "PASSPORT" ? "text" : "numeric"}
+                  maxLength={docType === "PASSPORT" ? 9 : 17}
                   className={`pr-10 font-mono transition-colors ${
-                    isValid   ? "border-emerald-500 focus:border-emerald-500 bg-emerald-500/5" :
-                    isInvalid ? "border-red-500   focus:border-red-500   bg-red-500/5"   : ""
+                    isValid
+                      ? "border-emerald-500 focus-visible:ring-emerald-500 bg-emerald-500/5 text-foreground"
+                      : isInvalid
+                      ? "border-destructive focus-visible:ring-destructive bg-destructive/5 text-foreground"
+                      : ""
                   }`}
                 />
                 {isValid && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 text-base">✓</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 font-bold text-base">
+                    ✓
+                  </span>
                 )}
                 {isInvalid && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 text-base">✗</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-destructive font-bold text-base">
+                    ✗
+                  </span>
                 )}
               </div>
-              <p className={`text-[11px] transition-colors ${
-                isValid ? "text-emerald-600 dark:text-emerald-400" :
-                isInvalid ? "text-red-500" : "text-muted-foreground"
-              }`}>
+              <p
+                className={`text-[11px] transition-colors ${
+                  isValid
+                    ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                    : isInvalid
+                    ? "text-destructive font-medium"
+                    : "text-muted-foreground"
+                }`}
+              >
                 {isValid
-                  ? `✓ Valid ${digits.length}-digit ${docType === "NID" ? "NID" : "Birth Certificate"} number`
+                  ? `✓ Valid ${docType === "PASSPORT" ? `${rawDoc.length}-character Passport` : `${digits.length}-digit ${docType === "NID" ? "NID" : "Birth Certificate"}`} number`
                   : isInvalid
-                  ? `✗ ${docHint} — you entered ${digits.length} digit${digits.length !== 1 ? "s" : ""}`
+                  ? `✗ ${docHint} — currently ${docType === "PASSPORT" ? rawDoc.length : digits.length} ${docType === "PASSPORT" ? "characters" : "digits"}`
                   : docHint}
               </p>
-              <div className="text-[11px] text-muted-foreground flex items-center gap-1 pt-0.5">
+              <div className="text-[10px] text-muted-foreground flex items-center gap-1 pt-0.5">
                 <Lock className="w-3 h-3 text-primary" />
-                Only a one-way cryptographic hash is transmitted.
+                Only a cryptographic hash is verified against sovereign registries. Raw number never exposed.
               </div>
             </div>
 
-            {/* Phone */}
+            {/* Mobile Phone */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-foreground">Mobile Phone Number (for SIM OTP)</label>
+              <label className="text-xs font-semibold text-foreground">
+                Mobile Phone Number (for SIM OTP) <span className="text-destructive">*</span>
+              </label>
               <div className="flex gap-2">
-                <span className="inline-flex items-center px-3 rounded-xl border border-input bg-secondary text-xs font-mono font-medium">+880</span>
+                <span className="inline-flex items-center px-3 rounded-xl border border-input bg-secondary text-xs font-mono font-medium">
+                  +880
+                </span>
                 <Input
                   placeholder="1712 345678"
                   value={phone}
@@ -510,28 +626,50 @@ export default function Onboarding() {
               </div>
             </div>
 
+            {/* Email Address */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-foreground">
+                Email Address (Security Notifications &amp; Alerts)
+              </label>
+              <Input
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
             {/* Doc upload simulation */}
             <div
               onClick={() => setDocUploaded(!docUploaded)}
-              className={`p-6 border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all ${docUploaded ? "border-emerald-500 bg-emerald-500/5" : "border-border hover:border-primary/50 bg-secondary/30"}`}
+              className={`p-5 border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all ${
+                docUploaded
+                  ? "border-emerald-500 bg-emerald-500/5"
+                  : "border-border hover:border-primary/50 bg-secondary/30"
+              }`}
             >
               {docUploaded ? (
                 <div className="space-y-1">
-                  <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-600" />
-                  <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Document Frame Verified — Ephemeral image purged</div>
+                  <CheckCircle2 className="w-7 h-7 mx-auto text-emerald-600" />
+                  <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                    Document Frame Verified — Ephemeral image purged
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-1">
-                  <UploadCloud className="w-8 h-8 mx-auto text-muted-foreground" />
+                  <UploadCloud className="w-7 h-7 mx-auto text-muted-foreground" />
                   <div className="text-xs font-semibold text-foreground">Click to Simulate Document Scan</div>
+                  <div className="text-[10px] text-muted-foreground">Checks document holograms &amp; MRZ lines</div>
                 </div>
               )}
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" className="w-1/3" onClick={() => setStep(0)}>Back</Button>
+              <Button variant="outline" className="w-1/3" onClick={() => setStep(0)}>
+                Back
+              </Button>
               <Button
-                className="w-2/3"
+                className="w-2/3 shadow-md"
                 disabled={!canSubmit || loading}
                 onClick={startEnrollment}
               >
@@ -771,7 +909,13 @@ export default function Onboarding() {
             </Button>
             <button
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => { if (finalResult) { setAuth("demo", finalResult.universalId); setStep(8); } }}
+              onClick={() => {
+                if (finalResult) {
+                  persistProfile(finalResult.universalId, finalResult.maskedId);
+                  setAuth("demo", finalResult.universalId);
+                  setStep(8);
+                }
+              }}
             >
               Skip (demo only — passkey will not be saved)
             </button>
@@ -791,13 +935,13 @@ export default function Onboarding() {
             </div>
             <div className="w-full max-w-md mx-auto">
               <IdCard
-                name="Registered Citizen"
+                name={fullName.trim() || "Registered Citizen"}
                 maskedId={finalResult.maskedId}
                 unmaskedId={finalResult.universalId}
                 status="ACTIVE"
                 nextProofOfLifeInDays={365}
                 badges={[
-                  { label: "NID", verified: true },
+                  { label: docType === "NID" ? "NID" : docType === "BIRTH_CERT" ? "Birth Cert" : "Passport", verified: true },
                   { label: "SIM", verified: true },
                   { label: "Face", verified: true },
                   { label: "Fingerprint", verified: true },

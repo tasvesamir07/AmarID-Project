@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowRight,
   Shield,
@@ -73,6 +73,13 @@ export default function BazarPage() {
   const [step, setStep] = useState<DemoStep>("browse");
   const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
   const [authAttempt, setAuthAttempt] = useState(0);
+  const [citizenName, setCitizenName] = useState("Mohammad Rahman");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const name = localStorage.getItem("amarid-profile-name");
+    if (name) setCitizenName(name);
+  }, []);
 
   const handleSignIn = () => {
     setAuthAttempt((n) => n + 1);
@@ -298,7 +305,7 @@ export default function BazarPage() {
 
                     <div className="space-y-2">
                       {[
-                        { scope: "Your display name", allowed: true },
+                        { scope: `Your display name (${citizenName})`, allowed: true },
                         { scope: "Promo uniqueness proof", allowed: true },
                         { scope: "NID number or biometrics", allowed: false },
                         { scope: "Phone number", allowed: false },
@@ -348,7 +355,7 @@ export default function BazarPage() {
                       </div>
                       <div className="text-xs text-muted-foreground flex items-center gap-2">
                         <CheckCircle2 className="w-3 h-3 text-success" />
-                        Display name only (not NID)
+                        Display name only ({citizenName})
                       </div>
                       <div className="text-xs text-muted-foreground flex items-center gap-2">
                         <CheckCircle2 className="w-3 h-3 text-success" />

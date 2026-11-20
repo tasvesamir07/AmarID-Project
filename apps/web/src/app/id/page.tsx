@@ -35,6 +35,9 @@ export default function IdPage() {
   const [displayName, setDisplayName] = useState("Md. Arifur Rahman");
   const [phone, setPhone] = useState("+880 1712 345678");
   const [email, setEmail] = useState("arifur.rahman@example.com");
+  const [dob, setDob] = useState("1998-05-14");
+  const [docType, setDocType] = useState("NID");
+  const [docNumber, setDocNumber] = useState("1982736450");
   const [alertSuccess, setAlertSuccess] = useState("");
 
   const currentUid = universalId || "AID-7K4M-8391-92QX";
@@ -44,9 +47,16 @@ export default function IdPage() {
     const savedName = localStorage.getItem("amarid-profile-name");
     const savedPhone = localStorage.getItem("amarid-profile-phone");
     const savedEmail = localStorage.getItem("amarid-profile-email");
+    const savedDob = localStorage.getItem("amarid-profile-dob");
+    const savedDocType = localStorage.getItem("amarid-profile-doctype");
+    const savedDocNum = localStorage.getItem("amarid-profile-docnum");
+
     if (savedName) setDisplayName(savedName);
     if (savedPhone) setPhone(savedPhone);
     if (savedEmail) setEmail(savedEmail);
+    if (savedDob) setDob(savedDob);
+    if (savedDocType) setDocType(savedDocType);
+    if (savedDocNum) setDocNumber(savedDocNum);
   }, []);
 
   const copyId = () => {
@@ -60,6 +70,7 @@ export default function IdPage() {
     localStorage.setItem("amarid-profile-name", displayName);
     localStorage.setItem("amarid-profile-phone", phone);
     localStorage.setItem("amarid-profile-email", email);
+    localStorage.setItem("amarid-profile-dob", dob);
     setIsEditing(false);
     setAlertSuccess("Profile details updated successfully!");
     setTimeout(() => setAlertSuccess(""), 3000);
@@ -151,7 +162,7 @@ export default function IdPage() {
                 />
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                     <Phone className="w-3.5 h-3.5 text-primary" />
@@ -175,6 +186,17 @@ export default function IdPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
                     required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <span>📅</span>
+                    Date of Birth
+                  </label>
+                  <Input
+                    type="date"
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
                   />
                 </div>
               </div>
@@ -232,13 +254,20 @@ export default function IdPage() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="grid sm:grid-cols-3 gap-4 pt-1">
+        <CardContent className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 pt-1">
           <div className="p-3.5 rounded-xl bg-secondary/40 border border-border/60">
             <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
               <User className="w-3.5 h-3.5 text-primary" />
               <span>Full Name</span>
             </div>
             <div className="font-semibold text-foreground text-sm mt-1">{displayName}</div>
+          </div>
+          <div className="p-3.5 rounded-xl bg-secondary/40 border border-border/60">
+            <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+              <span>📅</span>
+              <span>Date of Birth</span>
+            </div>
+            <div className="font-semibold text-foreground text-sm mt-1">{dob || "Not set"}</div>
           </div>
           <div className="p-3.5 rounded-xl bg-secondary/40 border border-border/60">
             <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">

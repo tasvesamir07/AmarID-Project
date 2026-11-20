@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowRight,
   Shield,
@@ -12,66 +12,109 @@ import {
   AlertCircle,
   Building2,
   ChevronLeft,
+  Info,
+  HelpCircle,
+  FileCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 
-interface AttributeItem {
-  key: string;
-  label: string;
-  desc: string;
-  valuePreview: string;
-  optional: boolean;
-  sensitive: boolean;
-  disabled?: boolean;
-}
-
-const ATTRS: AttributeItem[] = [
-  {
-    key: "name",
-    label: "Verified Full Name",
-    desc: "Confirms your legal name to Probashi Bank.",
-    valuePreview: "Md. Arifur Rahman",
-    optional: false,
-    sensitive: false,
-  },
-  {
-    key: "age",
-    label: "Over 18 Proof Only",
-    desc: "Confirms you meet the age requirement. Your exact birthdate is NOT shared.",
-    valuePreview: "True (Over 18)",
-    optional: false,
-    sensitive: false,
-  },
-  {
-    key: "phone",
-    label: "SIM Verification Status",
-    desc: "Confirms your phone number is biometric-registered in your name.",
-    valuePreview: "Verified SIM (+880 17•• ••••92)",
-    optional: true,
-    sensitive: false,
-  },
-  {
-    key: "nid",
-    label: "NID / Passport Number",
-    desc: "Strictly protected. Never transmitted or shared with third parties.",
-    valuePreview: "Blocked by Sovereign Policy",
-    optional: true,
-    sensitive: true,
-    disabled: true,
-  },
-];
-
 export default function Consent() {
+  const [citizenName, setCitizenName] = useState("Mohammad Rahman");
+  const [citizenPhone, setCitizenPhone] = useState("+880 1712 345678");
+  const [citizenDob, setCitizenDob] = useState("1998-05-14");
+  const [citizenDocType, setCitizenDocType] = useState("Smart NID");
+  const [citizenAid, setCitizenAid] = useState("AID-7K4M-8391-92QX");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const name = localStorage.getItem("amarid-profile-name");
+    const phone = localStorage.getItem("amarid-profile-phone");
+    const dob = localStorage.getItem("amarid-profile-dob");
+    const docType = localStorage.getItem("amarid-profile-doctype");
+    const aid = localStorage.getItem("amarid-profile-aid");
+
+    if (name) setCitizenName(name);
+    if (phone) setCitizenPhone(phone);
+    if (dob) setCitizenDob(dob);
+    if (aid) setCitizenAid(aid);
+    if (docType) {
+      setCitizenDocType(
+        docType === "NID"
+          ? "Smart NID"
+          : docType === "BIRTH_CERT"
+          ? "Birth Certificate"
+          : "Bangladesh Passport"
+      );
+    }
+  }, []);
+
+  // Compute citizen age
+  const calculateAge = (d: string) => {
+    if (!d) return 26;
+    const b = new Date(d);
+    if (isNaN(b.getTime())) return 26;
+    const today = new Date();
+    let a = today.getFullYear() - b.getFullYear();
+    const m = today.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < b.getDate())) a--;
+    return a;
+  };
+  const age = calculateAge(citizenDob);
+
+  // Mask phone for privacy
+  const maskPhone = (p: string) => {
+    const digits = p.replace(/\D/g, "");
+    if (digits.length < 6) return "+880 17•• ••••92";
+    const start = digits.slice(-10, -8);
+    const end = digits.slice(-2);
+    return `+880 ${start}•• ••••${end}`;
+  };
+
+  const attrs = [
+    {
+      key: "name",
+      label: "Verified Full Name",
+      desc: "Confirms your legal citizen name as recorded on official registers.",
+      valuePreview: citizenName,
+      optional: false,
+      sensitive: false,
+    },
+    {
+      key: "age",
+      label: "Over 18 Proof Only (Zero-Knowledge Age Claim)",
+      desc: "Confirms you meet age requirements for banking. Your exact birthdate is NEVER disclosed.",
+      valuePreview: `True (Age ${age} — ${age >= 18 ? "Over 18 Adult" : "Minor Citizen"})`,
+      optional: false,
+      sensitive: false,
+    },
+    {
+      key: "phone",
+      label: "SIM Verification Status",
+      desc: "Confirms your mobile number is biometric-registered to your identity.",
+      valuePreview: `Verified SIM (${maskPhone(citizenPhone)})`,
+      optional: true,
+      sensitive: false,
+    },
+    {
+      key: "nid",
+      label: `${citizenDocType} Raw Number`,
+      desc: "Strictly protected by Sovereign Data Vault. Third parties never see raw numbers.",
+      valuePreview: "Blocked by Sovereign Privacy Policy",
+      optional: true,
+      sensitive: true,
+      disabled: true,
+    },
+  ];
+
   const [toggles, setToggles] = useState<Record<string, boolean>>({
     name: true,
     age: true,
     phone: true,
   });
   const [stage, setStage] = useState<"review" | "confirming" | "done" | "declined">("review");
-  const [authMethod, setAuthMethod] = useState<"fingerprint" | "face">("face");
 
   const toggle = (k: string) => {
     setToggles((prev) => ({ ...prev, [k]: !prev[k] }));
@@ -79,14 +122,24 @@ export default function Consent() {
 
   const handleApprove = () => {
     setStage("confirming");
-    // Simulate biometric check completion
     setTimeout(() => {
       setStage("done");
-    }, 1800);
+    }, 1600);
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-8">
+    <div className="min-h-[85vh] flex flex-col items-center justify-center px-4 py-8 space-y-6">
+      {/* Educational Banner: What is Consent? */}
+      <div className="w-full max-w-lg p-4 rounded-2xl bg-secondary/60 border border-primary/20 flex items-start gap-3 shadow-sm">
+        <HelpCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+        <div className="space-y-1 text-xs">
+          <div className="font-bold text-foreground">💡 What is Identity Consent?</div>
+          <p className="text-muted-foreground leading-relaxed">
+            In AmarID, apps (like <strong className="text-foreground">Probashi Bank</strong>) can never take photocopies of your documents or steal your credentials. Instead, they request a <strong className="text-foreground">Consent Token</strong> for specific attributes. You choose what to share, and sign with your biometric passkey.
+          </p>
+        </div>
+      </div>
+
       <Card className="w-full max-w-lg border border-border shadow-xl rounded-2xl overflow-hidden bg-card">
         {/* Partner Header Banner */}
         <div className="p-6 bg-gradient-to-r from-primary to-[#00543e] text-white">
@@ -127,7 +180,7 @@ export default function Consent() {
 
               {/* Attributes List */}
               <div className="space-y-3">
-                {ATTRS.map((a) => {
+                {attrs.map((a) => {
                   const isChecked = toggles[a.key];
                   return (
                     <div
@@ -166,7 +219,7 @@ export default function Consent() {
                             </div>
                             <p className="text-xs text-muted-foreground leading-relaxed">{a.desc}</p>
                             <div className="text-[11px] font-mono text-primary font-medium pt-1">
-                              Value: {a.valuePreview}
+                              Value: <span className="font-bold">{a.valuePreview}</span>
                             </div>
                           </div>
                         </div>
@@ -196,7 +249,7 @@ export default function Consent() {
               <div className="space-y-1">
                 <CardTitle className="text-lg">Biometric Confirmation Required</CardTitle>
                 <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                  Confirming with your device-bound biometric passkey…
+                  Authorizing consent for <span className="text-foreground font-semibold">{citizenName}</span> with device-bound passkey…
                 </p>
               </div>
 
@@ -208,26 +261,32 @@ export default function Consent() {
                   <Fingerprint className="w-6 h-6" />
                 </div>
               </div>
-              <div className="text-xs font-mono text-muted-foreground">Generating zero-knowledge token…</div>
+              <div className="text-xs font-mono text-muted-foreground">Generating zero-knowledge verifiable credential…</div>
             </div>
           )}
 
           {stage === "done" && (
-            <div className="py-8 text-center space-y-4">
+            <div className="py-6 text-center space-y-4">
               <div className="w-16 h-16 rounded-full bg-emerald-500/15 text-emerald-600 flex items-center justify-center mx-auto">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
               <div className="space-y-1">
-                <CardTitle className="text-xl">Consent Authorized</CardTitle>
+                <CardTitle className="text-xl">Consent Authorized Successfully</CardTitle>
                 <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                  Probashi Bank has received your verified identity claim token. You can review or revoke this permission at any time from your dashboard.
+                  Probashi Bank received your verified identity claim token for citizen{" "}
+                  <strong className="text-foreground">{citizenName}</strong>.
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-secondary/50 border border-border text-left text-xs font-mono space-y-1">
-                <div className="text-muted-foreground">Token ID: tok_9f82c0a1b24e</div>
-                <div className="text-muted-foreground">Expires: In 1 hour</div>
-                <div className="text-emerald-600 font-semibold">Zero raw credentials exposed ✓</div>
+              <div className="p-3.5 rounded-xl bg-secondary/50 border border-border text-left text-xs font-mono space-y-1.5">
+                <div className="text-muted-foreground">Universal ID: <span className="text-foreground font-semibold">{citizenAid}</span></div>
+                <div className="text-muted-foreground">Authorized Name: <span className="text-foreground font-semibold">{citizenName}</span></div>
+                <div className="text-muted-foreground">Verified Age: <span className="text-emerald-600 font-semibold">{age >= 18 ? "Over 18 (True)" : "Minor (True)"}</span></div>
+                <div className="text-muted-foreground">Verified Phone: <span className="text-foreground">{maskPhone(citizenPhone)}</span></div>
+                <div className="text-emerald-600 font-semibold pt-1 border-t border-border flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Zero raw documents or biometrics were shared.</span>
+                </div>
               </div>
             </div>
           )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   CreditCard,
   Shield,
@@ -65,6 +65,28 @@ export default function Dashboard() {
   const { logout, universalId } = useAuth();
   const [apps, setApps] = useState<ConnectedApp[]>(INITIAL_APPS);
 
+  const [citizenName, setCitizenName] = useState("Md. Arifur Rahman");
+  const [citizenPhone, setCitizenPhone] = useState("+880 1712 345678");
+  const [citizenAid, setCitizenAid] = useState("AID-7K4M-8391-92QX");
+  const [citizenMaskedAid, setCitizenMaskedAid] = useState("AID-7K4M-••••-92QX");
+  const [citizenDocType, setCitizenDocType] = useState("NID");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const name = localStorage.getItem("amarid-profile-name");
+    const phone = localStorage.getItem("amarid-profile-phone");
+    const aid = localStorage.getItem("amarid-profile-aid") || universalId;
+    const docType = localStorage.getItem("amarid-profile-doctype");
+
+    if (name) setCitizenName(name);
+    if (phone) setCitizenPhone(phone);
+    if (docType) setCitizenDocType(docType);
+    if (aid) {
+      setCitizenAid(aid);
+      setCitizenMaskedAid(aid.replace(/-[A-Z0-9]{4}-/, "-••••-"));
+    }
+  }, [universalId]);
+
   const toggleRevoke = (name: string) => {
     setApps((prev) =>
       prev.map((app) => {
@@ -122,13 +144,13 @@ export default function Dashboard() {
 
             <div className="w-full max-w-md mx-auto">
               <IdCard
-                name="Md. Arifur Rahman"
-                maskedId="AID-7K4M-••••-92QX"
-                unmaskedId="AID-7K4M-8391-92QX"
+                name={citizenName}
+                maskedId={citizenMaskedAid}
+                unmaskedId={citizenAid}
                 status="ACTIVE"
                 nextProofOfLifeInDays={62}
                 badges={[
-                  { label: "NID", verified: true },
+                  { label: citizenDocType === "NID" ? "NID" : citizenDocType === "BIRTH_CERT" ? "Birth Cert" : "Passport", verified: true },
                   { label: "SIM", verified: true },
                   { label: "Face", verified: true },
                   { label: "Fingerprint", verified: true },
