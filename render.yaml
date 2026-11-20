@@ -14,7 +14,7 @@ services:
     name: amarid-api
     env: node
     plan: free
-    buildCommand: npm install --legacy-peer-deps && npx prisma generate && ./node_modules/.bin/tsc -p packages/shared/tsconfig.json && npm run build --workspace=apps/api && npx prisma db push --skip-generate
+    buildCommand: npm install --legacy-peer-deps && ./node_modules/.bin/prisma generate && ./node_modules/.bin/tsc -p packages/shared/tsconfig.json && npm run build --workspace=apps/api && ./node_modules/.bin/prisma db push --skip-generate
     startCommand: node apps/api/dist/main.js
     envVars:
       - key: NODE_ENV
