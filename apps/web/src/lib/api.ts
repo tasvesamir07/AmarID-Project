@@ -68,6 +68,7 @@ export function enrollmentStart(body: {
   docNumber: string;
   msisdn: string;
   email?: string;
+  fullName?: string;
   clientFingerprintHash: string;
 }): Promise<EnrollmentStartResult> {
   return request("POST", "/enrollments", body);
