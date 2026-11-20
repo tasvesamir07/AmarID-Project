@@ -1,6 +1,14 @@
 services:
   # -----------------------------------------------------------
-  # 1. NestJS Backend API
+  # 1. Redis Cache Service
+  # -----------------------------------------------------------
+  - type: redis
+    name: amarid-redis
+    plan: free
+    ipAllowList: []
+
+  # -----------------------------------------------------------
+  # 2. NestJS Backend API
   # -----------------------------------------------------------
   - type: web
     name: amarid-api
@@ -18,16 +26,17 @@ services:
           name: amarid-db
           property: connectionString
       - key: REDIS_URL
-        fromRedis:
+        fromService:
+          type: redis
           name: amarid-redis
           property: connectionString
       - key: PEPPER_HEX
-        value: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+        value: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
       - key: ENC_DEK_HEX
-        value: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+        value: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 
   # -----------------------------------------------------------
-  # 2. Next.js Frontend Web App
+  # 3. Next.js Frontend Web App
   # -----------------------------------------------------------
   - type: web
     name: amarid-web
@@ -50,7 +59,3 @@ databases:
     plan: free
     databaseName: amarid
     user: amarid
-
-  # Free Redis on Render
-  - name: amarid-redis
-    plan: free
