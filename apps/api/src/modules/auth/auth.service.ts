@@ -121,6 +121,8 @@ export class AuthService {
       challengeId,
       expiresAt: new Date(record.expiresAt),
       resendAvailableAt: new Date(record.resendAt),
+      // Return code in response when no real SMS/email provider configured (free demo mode)
+      ...(process.env.OTP_DEV_MODE === 'true' ? { devCode: code } : {}),
     };
   }
 

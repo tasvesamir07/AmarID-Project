@@ -89,22 +89,79 @@ class MockFingerprintMatcher implements FingerprintMatcher {
   }
 }
 
-/* ---------- Console SMS Gateway (dev) ---------- */
+/* ---------- SMS Gateway: Twilio (prod) or console (dev) ---------- */
 @Injectable()
-class ConsoleSmsGateway implements SmsGateway {
+class SmartSmsGateway implements SmsGateway {
+  private readonly logger = new (require('@nestjs/common').Logger)('SmsGateway');
+  constructor(private readonly config: ConfigService) {}
+
   async send(to: string, text: string): Promise<{ messageId: string }> {
-    // eslint-disable-next-line no-console
-    console.log(`[SMS MOCK] to=${to} body=${text}`);
-    return { messageId: `mock-sms-${Date.now()}` };
+    const accountSid = this.config.get<string>('TWILIO_ACCOUNT_SID');
+    const authToken  = this.config.get<string>('TWILIO_AUTH_TOKEN');
+    const fromNumber = this.config.get<string>('TWILIO_FROM_NUMBER');
+
+    if (accountSid && authToken && fromNumber) {
+      try {
+        const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+        const body = new URLSearchParams({ To: to, From: fromNumber, Body: text });
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: {
+            Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body,
+        });
+        const data: any = await resp.json();
+        if (!resp.ok) throw new Error(data?.message || 'Twilio error');
+        this.logger.log(`SMS sent to ${to} via Twilio: ${data.sid}`);
+        return { messageId: data.sid };
+      } catch (err: any) {
+        this.logger.error(`Twilio SMS failed: ${err.message}`);
+      }
+    }
+    // Fallback: log OTP to console (visible in Render logs)
+    this.logger.warn(`[SMS CONSOLE] to=${to} | ${text}`);
+    return { messageId: `console-sms-${Date.now()}` };
   }
 }
 
-/* ---------- Dev Mailer (logs to console; Mailpit in docker) ---------- */
+/* ---------- Mailer: Resend (prod) or console (dev) ---------- */
 @Injectable()
-class DevMailer implements Mailer {
+class SmartMailer implements Mailer {
+  private readonly logger = new (require('@nestjs/common').Logger)('Mailer');
+  constructor(private readonly config: ConfigService) {}
+
   async send(message: { to: string; subject: string; html: string; text: string }): Promise<void> {
-    // eslint-disable-next-line no-console
-    console.log(`[EMAIL MOCK] to=${message.to} subject=${message.subject}`);
+    const resendApiKey = this.config.get<string>('RESEND_API_KEY');
+    const fromEmail    = this.config.get<string>('MAIL_FROM', 'AmarID <noreply@amarid.gov.bd>');
+
+    if (resendApiKey) {
+      try {
+        const resp = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: fromEmail,
+            to: [message.to],
+            subject: message.subject,
+            html: message.html,
+            text: message.text,
+          }),
+        });
+        const data: any = await resp.json();
+        if (!resp.ok) throw new Error(data?.message || 'Resend error');
+        this.logger.log(`Email sent to ${message.to} via Resend: ${data.id}`);
+        return;
+      } catch (err: any) {
+        this.logger.error(`Resend email failed: ${err.message}`);
+      }
+    }
+    // Fallback: log to console (visible in Render logs)
+    this.logger.warn(`[EMAIL CONSOLE] to=${message.to} | subject=${message.subject} | ${message.text}`);
   }
 }
 
@@ -123,8 +180,8 @@ class MockDeceasedRegistry implements DeceasedRegistry {
     { provide: SIM_REGISTRY, useClass: MockSimRegistry },
     { provide: LIVENESS_PROVIDER, useClass: MockLivenessProvider },
     { provide: FINGERPRINT_MATCHER, useClass: MockFingerprintMatcher },
-    { provide: SMS_GATEWAY, useClass: ConsoleSmsGateway },
-    { provide: MAILER, useClass: DevMailer },
+    { provide: SMS_GATEWAY, useClass: SmartSmsGateway },
+    { provide: MAILER, useClass: SmartMailer },
     { provide: DECEASED_REGISTRY, useClass: MockDeceasedRegistry },
   ],
   exports: [NID_PROVIDER, SIM_REGISTRY, LIVENESS_PROVIDER, FINGERPRINT_MATCHER, SMS_GATEWAY, MAILER, DECEASED_REGISTRY],

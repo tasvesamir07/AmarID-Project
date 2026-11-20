@@ -40,6 +40,10 @@ services:
         value: "amarid-session-secret-key-2024-production-use-only"
       - key: CORS_ORIGINS
         value: "https://amarid-web.onrender.com"
+      - key: OTP_DEV_MODE
+        value: "true"
+      - key: RESEND_API_KEY
+        value: ""
 
   # -----------------------------------------------------------
   # 3. Next.js Frontend Web App

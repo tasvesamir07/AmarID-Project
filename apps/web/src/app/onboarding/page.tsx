@@ -138,8 +138,8 @@ export default function Onboarding() {
       // Request SIM OTP
       const otp = await simOtpRequest(res.enrollmentId, msisdn);
       setSimChallenge(otp);
-      // In OTP_DEV_MODE the code is printed to the API console — we also show a hint
-      setSimDevCode("(check API console for OTP code — dev mode)");
+      // Show OTP on screen if returned by API (free dev mode — no SMS cost)
+      setSimDevCode(otp.devCode ? `📱 Your OTP: ${otp.devCode}` : "(check Render logs for OTP code)");
       setStep(2);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -183,7 +183,7 @@ export default function Onboarding() {
       try {
         const otp = await emailOtpRequest(enrollmentId.current, email);
         setEmailChallenge(otp);
-        setEmailDevCode("(check API console for email OTP — dev mode)");
+        setEmailDevCode(otp.devCode ? `📧 Your OTP: ${otp.devCode}` : "(check Render logs for email OTP)");
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Failed to send email OTP");
       } finally {
