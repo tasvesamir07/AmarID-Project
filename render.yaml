@@ -55,6 +55,8 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: API_URL
+        value: https://amarid-api.onrender.com
       - key: NEXT_PUBLIC_API_URL
         value: https://amarid-api.onrender.com
 
