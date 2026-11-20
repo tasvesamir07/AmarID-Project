@@ -22,9 +22,9 @@ services:
           name: amarid-redis
           property: connectionString
       - key: PEPPER_HEX
-        generateValue: true
+        value: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       - key: ENC_DEK_HEX
-        generateValue: true
+        value: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 
   # -----------------------------------------------------------
   # 2. Next.js Frontend Web App
@@ -51,6 +51,6 @@ databases:
     databaseName: amarid
     user: amarid
 
-  # Free Redis / Key-Value on Render
+  # Free Redis on Render
   - name: amarid-redis
     plan: free
