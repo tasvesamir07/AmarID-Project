@@ -76,10 +76,11 @@ export default function Onboarding() {
   const [finalResult, setFinalResult] = useState<FinalizeResult | null>(null);
 
   // Step 1 — Document
-  const [docType, setDocType] = useState<"NID" | "PASSPORT">("NID");
+  const [docType, setDocType] = useState<"NID" | "BIRTH_CERT">("NID");
   const [docNumber, setDocNumber] = useState("");
   const [docUploaded, setDocUploaded] = useState(false);
   const [phone, setPhone] = useState(""); // collected here for step 2 start call
+  const [fullName, setFullName] = useState("");
 
   // Step 2 — SIM OTP
   const [simChallenge, setSimChallenge] = useState<OtpRequestResult | null>(null);
@@ -128,6 +129,7 @@ export default function Onboarding() {
         docNumber,
         msisdn,
         email: email || undefined,
+        fullName: fullName.trim(),
         clientFingerprintHash: cfp,
       });
       enrollmentId.current = res.enrollmentId;
@@ -403,37 +405,97 @@ export default function Onboarding() {
         )}
 
         {/* ── STEP 1: Document + phone collect ── */}
-        {step === 1 && (
+        {step === 1 && (() => {
+          // Validation logic
+          const digits = docNumber.replace(/\D/g, "");
+          const validLengths = docType === "NID" ? [10, 17] : [13, 17];
+          const isValid = digits.length > 0 && validLengths.includes(digits.length);
+          const isInvalid = digits.length > 0 && !validLengths.includes(digits.length);
+          const docLabel = docType === "NID" ? "NID Card Number" : "Birth Certificate Number";
+          const docHint  = docType === "NID"
+            ? "Must be exactly 10 or 17 digits"
+            : "Must be exactly 13 or 17 digits";
+          const docPlaceholder = docType === "NID" ? "e.g. 1982736450 (10 digits)" : "e.g. 2000123456789 (13 digits)";
+
+          const canSubmit = fullName.trim().length >= 2 && isValid && docUploaded && phone.length >= 9;
+
+          return (
           <Card className="w-full border border-border shadow-xl p-6 sm:p-8 space-y-5">
             <div>
               <CardTitle className="text-xl font-bold">1. Identity Document</CardTitle>
               <p className="text-xs text-muted-foreground mt-1">We read it once for verification and never keep the image.</p>
             </div>
+
+            {/* Full Name */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-foreground">Full Name (as on document)</label>
+              <Input
+                placeholder="e.g. Mohammad Rahman"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+              {fullName.trim().length > 0 && fullName.trim().length < 2 && (
+                <p className="text-[11px] text-red-500">Name must be at least 2 characters</p>
+              )}
+            </div>
+
+            {/* Doc type toggle */}
             <div className="grid grid-cols-2 gap-3">
-              {(["NID", "PASSPORT"] as const).map((t) => (
+              {([
+                { key: "NID",        label: "Smart NID Card",        sub: "10 or 17 digit number" },
+                { key: "BIRTH_CERT", label: "Birth Certificate",     sub: "13 or 17 digit number" },
+              ] as const).map((t) => (
                 <button
-                  key={t}
+                  key={t.key}
                   type="button"
-                  onClick={() => setDocType(t)}
-                  className={`p-4 rounded-xl border text-left transition-all ${docType === t ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-secondary"}`}
+                  onClick={() => { setDocType(t.key); setDocNumber(""); }}
+                  className={`p-4 rounded-xl border text-left transition-all ${docType === t.key ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-secondary"}`}
                 >
-                  <div className="font-semibold text-sm text-foreground">{t === "NID" ? "Smart NID Card" : "Bangladesh Passport"}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{t === "NID" ? "10 or 17 digit number" : "Machine-Readable / e-Passport"}</div>
+                  <div className="font-semibold text-sm text-foreground">{t.label}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{t.sub}</div>
                 </button>
               ))}
             </div>
+
+            {/* Document number with live validation */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-foreground">{docType === "NID" ? "NID Card Number" : "Passport Number"}</label>
-              <Input
-                placeholder={docType === "NID" ? "e.g. 1982736450" : "e.g. A01234567"}
-                value={docNumber}
-                onChange={(e) => setDocNumber(e.target.value)}
-              />
-              <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+              <label className="text-xs font-semibold text-foreground">{docLabel}</label>
+              <div className="relative">
+                <Input
+                  placeholder={docPlaceholder}
+                  value={docNumber}
+                  onChange={(e) => setDocNumber(e.target.value.replace(/\D/g, ""))}
+                  inputMode="numeric"
+                  maxLength={17}
+                  className={`pr-10 font-mono transition-colors ${
+                    isValid   ? "border-emerald-500 focus:border-emerald-500 bg-emerald-500/5" :
+                    isInvalid ? "border-red-500   focus:border-red-500   bg-red-500/5"   : ""
+                  }`}
+                />
+                {isValid && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 text-base">✓</span>
+                )}
+                {isInvalid && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 text-base">✗</span>
+                )}
+              </div>
+              <p className={`text-[11px] transition-colors ${
+                isValid ? "text-emerald-600 dark:text-emerald-400" :
+                isInvalid ? "text-red-500" : "text-muted-foreground"
+              }`}>
+                {isValid
+                  ? `✓ Valid ${digits.length}-digit ${docType === "NID" ? "NID" : "Birth Certificate"} number`
+                  : isInvalid
+                  ? `✗ ${docHint} — you entered ${digits.length} digit${digits.length !== 1 ? "s" : ""}`
+                  : docHint}
+              </p>
+              <div className="text-[11px] text-muted-foreground flex items-center gap-1 pt-0.5">
                 <Lock className="w-3 h-3 text-primary" />
                 Only a one-way cryptographic hash is transmitted.
               </div>
             </div>
+
+            {/* Phone */}
             <div className="space-y-1">
               <label className="text-xs font-semibold text-foreground">Mobile Phone Number (for SIM OTP)</label>
               <div className="flex gap-2">
@@ -443,9 +505,12 @@ export default function Onboarding() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="font-mono"
+                  inputMode="tel"
                 />
               </div>
             </div>
+
+            {/* Doc upload simulation */}
             <div
               onClick={() => setDocUploaded(!docUploaded)}
               className={`p-6 border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all ${docUploaded ? "border-emerald-500 bg-emerald-500/5" : "border-border hover:border-primary/50 bg-secondary/30"}`}
@@ -462,11 +527,12 @@ export default function Onboarding() {
                 </div>
               )}
             </div>
+
             <div className="flex gap-3">
               <Button variant="outline" className="w-1/3" onClick={() => setStep(0)}>Back</Button>
               <Button
                 className="w-2/3"
-                disabled={!docNumber || !docUploaded || phone.length < 9 || loading}
+                disabled={!canSubmit || loading}
                 onClick={startEnrollment}
               >
                 {loading ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
@@ -481,7 +547,8 @@ export default function Onboarding() {
               </Link>
             </div>
           </Card>
-        )}
+          );
+        })()}
 
         {/* ── STEP 2: SIM OTP ── */}
         {step === 2 && (
