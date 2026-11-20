@@ -1,0 +1,46 @@
+﻿# AmarID local infrastructure
+# Run: docker compose up
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: amarid-postgres
+    environment:
+      POSTGRES_USER: amarid
+      POSTGRES_PASSWORD: amarid_dev_password
+      POSTGRES_DB: amarid
+    ports:
+      - "5433:5432"
+    volumes:
+      - amarid_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U amarid -d amarid"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: amarid-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - amarid_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: amarid-mailpit
+    ports:
+      - "8025:8025" # web UI
+      - "1025:1025" # SMTP
+    environment:
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+
+volumes:
+  amarid_postgres_data:
+  amarid_redis_data:

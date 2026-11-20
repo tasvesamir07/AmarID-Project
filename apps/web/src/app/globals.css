@@ -1,0 +1,150 @@
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* AmarID Design System Tokens (Spec 01-UI-UX.md) */
+    /* Surfaces: soft off-white #F7F9F8 */
+    --background: 247 249 248;
+    /* Primary text: deep slate #0F1714 */
+    --foreground: 15 23 20;
+
+    /* Surfaces / Cards: crisp pure white */
+    --card: 255 255 255;
+    --card-foreground: 15 23 20;
+
+    --popover: 255 255 255;
+    --popover-foreground: 15 23 20;
+
+    /* Primary: Bangladesh flag deep green #006A4E */
+    --primary: 0 106 78;
+    --primary-foreground: 255 255 255;
+
+    /* Secondary: light mint surface */
+    --secondary: 236 244 240;
+    --secondary-foreground: 0 106 78;
+
+    /* Muted: subtle neutral with WCAG AA compliant slate text #52635B */
+    --muted: 238 243 240;
+    --muted-foreground: 82 99 91;
+
+    /* Accent: warm red-coral #F42A41 used sparingly for alerts and key CTAs */
+    --accent: 244 42 65;
+    --accent-foreground: 255 255 255;
+
+    /* Semantic states */
+    --destructive: 220 38 38;
+    --destructive-foreground: 255 255 255;
+    --success: 16 149 91;
+    --success-foreground: 255 255 255;
+    --warning: 217 119 6;
+    --warning-foreground: 255 255 255;
+
+    /* Borders & Inputs: soft slate-green line #DCE5E0 */
+    --border: 220 230 224;
+    --input: 220 230 224;
+    --ring: 0 106 78;
+
+    /* 16-24px radii as specified */
+    --radius: 1rem;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-bengali: 'Hind Siliguri', 'Noto Sans Bengali', 'Inter', sans-serif;
+  }
+
+  .dark {
+    /* Dark mode surface #0B1210 */
+    --background: 11 18 16;
+    --foreground: 245 248 246;
+
+    /* Dark mode cards: #121C18 */
+    --card: 18 28 24;
+    --card-foreground: 245 248 246;
+
+    --popover: 18 28 24;
+    --popover-foreground: 245 248 246;
+
+    /* Vibrant emerald for dark contrast #10B981 */
+    --primary: 16 185 129;
+    --primary-foreground: 11 18 16;
+
+    --secondary: 26 38 33;
+    --secondary-foreground: 245 248 246;
+
+    --muted: 26 38 33;
+    --muted-foreground: 148 168 159;
+
+    --accent: 244 42 65;
+    --accent-foreground: 255 255 255;
+
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+    --success: 16 185 129;
+    --success-foreground: 11 18 16;
+    --warning: 245 158 11;
+    --warning-foreground: 11 18 16;
+
+    --border: 34 50 44;
+    --input: 34 50 44;
+    --ring: 16 185 129;
+  }
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    background-color: rgb(var(--background));
+    color: rgb(var(--foreground));
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .font-bengali {
+    font-family: var(--font-bengali);
+    line-height: 1.6;
+  }
+
+  /* Signature Holographic Universal ID Card Styles */
+  .holographic-card {
+    background: linear-gradient(135deg, #004D38 0%, #006A4E 45%, #087F5B 75%, #00543E 100%);
+    box-shadow: 0 20px 40px -12px rgba(0, 106, 78, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+  }
+
+  .holographic-shimmer {
+    background: linear-gradient(
+      115deg,
+      transparent 15%,
+      rgba(255, 255, 255, 0.05) 30%,
+      rgba(255, 255, 255, 0.22) 48%,
+      rgba(244, 42, 65, 0.18) 52%,
+      rgba(0, 230, 140, 0.18) 56%,
+      rgba(255, 255, 255, 0.1) 65%,
+      transparent 85%
+    );
+    background-size: 250% 250%;
+    animation: shimmer 4s ease-in-out infinite;
+  }
+
+  .gold-chip {
+    background: linear-gradient(135deg, #ECC94B 0%, #D69E2E 50%, #B7791F 100%);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

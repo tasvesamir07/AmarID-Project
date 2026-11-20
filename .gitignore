@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+*/node_modules/
+apps/*/node_modules/
+packages/*/node_modules/
+.pnp
+.pnp.js
+
+# Environment & Secrets (NEVER COMMIT)
+.env
+.env*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+config/*.pem
+config/dev-jwt-private.pem
+
+# Next.js build outputs
+.next/
+apps/*/.next/
+apps/*/out/
+next-env.d.ts
+apps/*/next-env.d.ts
+
+# TypeScript & Build outputs
+dist/
+apps/*/dist/
+packages/*/dist/
+*.tsbuildinfo
+.turbo/
+
+# Logs & Debugging
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+temp_*.log
+
+# Testing & Coverage
+coverage/
+.nyc_output/
+
+# Prisma & Database
+prisma/*.db
+prisma/*.db-journal
+prisma/migrations/*.lock
+
+# IDE & OS files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files & Scratch
+tmp/
+temp/
+scratch/

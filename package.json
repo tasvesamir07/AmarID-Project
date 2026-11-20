@@ -1,0 +1,31 @@
+{
+  "name": "amarid-monorepo",
+  "private": true,
+  "description": "AmarID — Privacy-first, biometric-backed universal digital identity platform for Bangladesh",
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/web",
+    "dev:api": "npm run start:dev --workspace=apps/api",
+    "dev:rp": "npm run dev --workspace=apps/demo-rp",
+    "build": "npm run build --workspaces --if-present",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "demo": "npm run db:push && npm run db:seed",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "devDependencies": {
+    "prisma": "^5.19.0",
+    "tsx": "^4.17.0",
+    "typescript": "~5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

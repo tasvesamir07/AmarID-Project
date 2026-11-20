@@ -1,0 +1,15 @@
+﻿{
+  "name": "@amarid/shared",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "type": "commonjs",
+  "files": [
+    "src/types/index.ts",
+    "src/constants/index.ts",
+    "src/schemas/index.ts",
+    "src/crypto/index.ts",
+    "src/errors/index.ts"
+  ]
+}
