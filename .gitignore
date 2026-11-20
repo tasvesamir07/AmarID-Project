@@ -6,32 +6,52 @@ packages/*/node_modules/
 .pnp
 .pnp.js
 
-# Environment & Secrets (NEVER COMMIT)
+# Environment & Config
 .env
 .env*
-!.env.example
+*.env
+.env.example
+
+# Crypto & Secrets
 *.pem
 *.key
 *.cert
 *.crt
-config/*.pem
-config/dev-jwt-private.pem
+config/
 
-# Next.js build outputs
+# Build & Compiler Outputs
+dist/
+apps/*/dist/
+packages/*/dist/
 .next/
 apps/*/.next/
 apps/*/out/
 next-env.d.ts
 apps/*/next-env.d.ts
-
-# TypeScript & Build outputs
-dist/
-apps/*/dist/
-packages/*/dist/
 *.tsbuildinfo
 .turbo/
 
-# Logs & Debugging
+# Images & Screenshots (exclude all png/jpg/jpeg/webp)
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.ico
+!apps/web/public/favicon.ico
+
+# Documentation & Spec Markdown (keep only README.md if desired)
+*.md
+!README.md
+docs/
+
+# Docker Files (if you don't want Docker configs uploaded)
+Dockerfile*
+docker-compose*.yml
+docker-compose*.yaml
+.dockerignore
+
+# Logs & Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -43,12 +63,12 @@ temp_*.log
 coverage/
 .nyc_output/
 
-# Prisma & Database
+# Prisma & Database Locks
 prisma/*.db
 prisma/*.db-journal
 prisma/migrations/*.lock
 
-# IDE & OS files
+# OS & Editor Files
 .vscode/
 .idea/
 *.suo
@@ -60,7 +80,7 @@ prisma/migrations/*.lock
 Thumbs.db
 desktop.ini
 
-# Temporary files & Scratch
+# Temporary files
 tmp/
 temp/
 scratch/
