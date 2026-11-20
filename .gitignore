@@ -84,3 +84,5 @@ desktop.ini
 tmp/
 temp/
 scratch/
+
+package-lock.json
