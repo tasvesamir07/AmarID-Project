@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { CheckCircle2, Shield, Lock, QrCode, Eye, EyeOff, Sparkles, RefreshCw } from "lucide-react";
+import { CheckCircle2, Shield, Lock, QrCode, Eye, EyeOff, Sparkles, RefreshCw, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -51,6 +51,14 @@ export function IdCard({
   const toggleReveal = () => {
     setRevealed(!revealed);
     if (onReveal) onReveal();
+  };
+
+  const [copied, setCopied] = useState(false);
+  const copyId = () => {
+    const idToCopy = revealed ? unmaskedId : maskedId;
+    navigator.clipboard?.writeText(idToCopy).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -143,8 +151,18 @@ export function IdCard({
             </button>
           </div>
 
-          <div className="font-mono text-lg md:text-xl font-bold tracking-widest text-white drop-shadow-md py-0.5">
-            {revealed ? unmaskedId : maskedId}
+          <div
+            className="font-mono text-lg md:text-xl font-bold tracking-widest text-white drop-shadow-md py-0.5 cursor-pointer select-all group flex items-center gap-2 transition-opacity"
+            onClick={copyId}
+            title="Click to copy your ID"
+          >
+            <span>{revealed ? unmaskedId : maskedId}</span>
+            <span className="opacity-0 group-hover:opacity-80 transition-opacity text-emerald-200">
+              {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
+            </span>
+            {copied && (
+              <span className="text-[11px] font-normal text-emerald-300 animate-pulse">Copied!</span>
+            )}
           </div>
 
           <div className="text-sm font-semibold tracking-wide text-white/95 mt-0.5">

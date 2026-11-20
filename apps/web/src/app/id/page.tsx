@@ -212,7 +212,7 @@ export default function IdPage() {
         </div>
         <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5">
           <Shield className="w-3.5 h-3.5 text-primary" />
-          <span>Tap card to toggle full ID or reveal rotating verification QR</span>
+          <span>Click the ID number to copy · Tap card to reveal full ID</span>
         </p>
       </div>
 
