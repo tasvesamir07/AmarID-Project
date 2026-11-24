@@ -1,1 +1,0 @@
-module.exports = { darkMode: ["class"], content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"], theme: { container: { center: true, padding: "1rem" }, extend: { colors: { primary: { DEFAULT: "#006A4E", foreground: "#FFFFFF" }, accent: { DEFAULT: "#F42A41", foreground: "#FFFFFF" } } } }, plugins: [] };

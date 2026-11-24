@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+/*
+ * AmarID design tokens.
+ *
+ * A civic product should feel calm and legible before it feels clever: warm
+ * paper, near-black ink, one green, and the flag red reserved for the mark and
+ * for genuine errors. All text/background pairs below meet WCAG AA.
+ */
+@theme {
+  --color-paper: #f6f5f0;
+  --color-surface: #ffffff;
+  --color-sunken: #efeee7;
+  --color-ink: #0f1a14;
+  --color-ink-2: #3a4740;
+  --color-ink-3: #5c6861;
+  --color-line: #e1dfd5;
+  --color-line-strong: #c9c6b9;
+
+  --color-brand: #0a6847;
+  --color-brand-strong: #07503a;
+  --color-brand-deep: #06402c;
+  --color-brand-soft: #e2f1ea;
+  --color-flag: #d8342b;
+
+  --color-warn: #7a4f00;
+  --color-warn-soft: #fff2d1;
+  --color-danger: #a8231c;
+  --color-danger-soft: #fce9e7;
+  --color-info: #1d4f91;
+  --color-info-soft: #e6effb;
+
+  --font-sans: var(--font-latin), var(--font-bangla), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-code), ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 2px rgb(15 26 20 / 0.04), 0 8px 24px -12px rgb(15 26 20 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(15 26 20 / 0.06), 0 24px 48px -20px rgb(6 64 44 / 0.35);
+
+  --animate-rise: rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-pop: pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+}
+
+@layer base {
+  html {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Bangla script needs more vertical room than Latin at the same size. */
+  :lang(bn) body {
+    line-height: 1.7;
+  }
+  :lang(bn) h1,
+  :lang(bn) h2,
+  :lang(bn) h3 {
+    line-height: 1.35;
+    letter-spacing: 0;
+  }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  ::selection {
+    background: var(--color-brand-soft);
+  }
+  button,
+  [role="button"],
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Fine guilloche-like lines used on the ID card, as on printed identity documents. */
+  .card-pattern {
+    background-image:
+      radial-gradient(120% 90% at 100% 0%, rgb(255 255 255 / 0.14), transparent 60%),
+      repeating-radial-gradient(circle at 0% 100%, rgb(255 255 255 / 0.05) 0 1px, transparent 1px 14px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

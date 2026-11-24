@@ -1,0 +1,30 @@
+{
+  "name": "@amarid/partners",
+  "private": true,
+  "version": "2.0.0",
+  "description": "Demo relying parties (Bazar Local shop, Probashi Bank) that integrate AmarID over standard OpenID Connect",
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "jose": "^6.2.18",
+    "lucide-react": "^1.79.0",
+    "next": "16.4.6",
+    "openid-client": "^6.9.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "dotenv": "^18.0.10"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.5",
+    "typescript": "5.9.3"
+  }
+}

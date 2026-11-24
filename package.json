@@ -1,32 +1,28 @@
 {
-  "name": "amarid-monorepo",
+  "name": "amarid",
   "private": true,
-  "description": "AmarID — Privacy-first, biometric-backed universal digital identity platform for Bangladesh",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "description": "AmarID — a privacy-first universal digital identity for Bangladesh",
   "workspaces": [
-    "apps/api",
-    "apps/web",
-    "packages/*"
+    "apps/*"
   ],
+  "engines": {
+    "node": ">=20.19"
+  },
   "scripts": {
-    "dev": "npm run dev --workspace=apps/web",
-    "dev:api": "npm run start:dev --workspace=apps/api",
-    "dev:rp": "npm run dev --workspace=apps/demo-rp",
-    "build": "npm run build --workspaces --if-present",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed.ts",
-    "demo": "npm run db:push && npm run db:seed",
-    "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present"
+    "db": "node scripts/dev-db.mjs",
+    "db:migrate": "npm run db:migrate -w @amarid/id",
+    "db:seed": "npm run db:seed -w @amarid/id",
+    "setup": "npm run db:migrate && npm run db:seed",
+    "dev": "node scripts/dev.mjs",
+    "dev:id": "npm run dev -w @amarid/id",
+    "dev:partners": "npm run dev -w @amarid/partners",
+    "build": "npm run build -w @amarid/id && npm run build -w @amarid/partners",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test -w @amarid/id",
+    "test:e2e": "npm run test:e2e -w @amarid/id"
   },
   "devDependencies": {
-    "prisma": "^5.19.0",
-    "tsx": "^4.17.0",
-    "typescript": "~5.6.0"
-  },
-  "engines": {
-    "node": "20.x"
+    "embedded-postgres": "17.12.0-beta.19"
   }
 }

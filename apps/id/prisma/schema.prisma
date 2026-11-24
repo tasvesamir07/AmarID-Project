@@ -1,0 +1,291 @@
+// AmarID data model.
+//
+// Rules this schema enforces by construction:
+//  * No raw document number, face image or fingerprint is ever a column.
+//    Document and phone numbers are stored as keyed blind indexes (HMAC) for
+//    uniqueness, plus AES-256-GCM sealed values where the value must be
+//    readable again (name, date of birth, phone for consented sharing).
+//  * Face templates are stored only after a keyed cancelable transform, sealed.
+//  * The Registry* and SandboxMessage tables are NOT AmarID data: they stand in
+//    for external systems (Election Commission NID registry, BTRC SIM registry,
+//    the mobile network) while running in sandbox mode.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum IdentityStatus {
+  ACTIVE
+  DORMANT // proof-of-life overdue: partner sign-in is blocked until re-verified
+  SUSPENDED
+  DECEASED
+}
+
+enum DocType {
+  NID
+  PASSPORT
+}
+
+enum EnrollmentState {
+  DOCUMENT_VERIFIED
+  PHONE_VERIFIED
+  FACE_VERIFIED
+  ISSUED
+  REJECTED
+}
+
+enum ChallengeKind {
+  OTP
+  LIVENESS
+  WEBAUTHN_REGISTRATION
+  WEBAUTHN_AUTHENTICATION
+  AUTHORIZATION_REQUEST
+  RECOVERY
+}
+
+enum ClientType {
+  CONFIDENTIAL
+  PUBLIC
+}
+
+model Identity {
+  id             String         @id @default(uuid()) @db.Uuid
+  universalId    String         @unique
+  status         IdentityStatus @default(ACTIVE)
+  docType        DocType
+  docIndex       String         @unique // HMAC blind index of the document number
+  nameSealed     Bytes
+  dobSealed      Bytes
+  issuedAt       DateTime       @default(now())
+  lastLivenessAt DateTime       @default(now())
+  livenessDueAt  DateTime
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  faceTemplates FaceTemplate[]
+  phones        Phone[]
+  passkeys      Passkey[]
+  sessions      Session[]
+  grants        Grant[]
+  passes        VerificationPass[]
+}
+
+model FaceTemplate {
+  id               String   @id @default(uuid()) @db.Uuid
+  identity         Identity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  identityId       String   @db.Uuid
+  sealed           Bytes // AES-256-GCM( cancelable-transform( embedding ) )
+  transformVersion Int      @default(1)
+  createdAt        DateTime @default(now())
+
+  @@index([identityId])
+}
+
+model Phone {
+  id          String   @id @default(uuid()) @db.Uuid
+  identity    Identity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  identityId  String   @db.Uuid
+  phoneIndex  String   @unique // one SIM can back only one identity
+  phoneSealed Bytes
+  verifiedAt  DateTime @default(now())
+
+  @@index([identityId])
+}
+
+model Passkey {
+  id           String    @id @default(uuid()) @db.Uuid
+  identity     Identity  @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  identityId   String    @db.Uuid
+  credentialId String    @unique
+  publicKey    Bytes
+  counter      BigInt    @default(0)
+  transports   String[]
+  deviceType   String // singleDevice | multiDevice
+  backedUp     Boolean   @default(false)
+  label        String
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+  revokedAt    DateTime?
+
+  @@index([identityId])
+}
+
+model Session {
+  id         String   @id @default(uuid()) @db.Uuid
+  tokenHash  String   @unique
+  identity   Identity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  identityId String   @db.Uuid
+  amr        String[] // authentication methods, e.g. ["hwk","user"] or ["face","otp"]
+  authAt     DateTime @default(now())
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  @@index([identityId])
+  @@index([expiresAt])
+}
+
+model Enrollment {
+  id             String          @id @default(uuid()) @db.Uuid
+  tokenHash      String          @unique // bound to an HttpOnly cookie; the id alone grants nothing
+  state          EnrollmentState
+  docType        DocType
+  docIndex       String
+  nameSealed     Bytes
+  dobSealed      Bytes
+  phoneIndex     String?
+  phoneSealed    Bytes?
+  faceSealed     Bytes?
+  rejectedReason String?
+  identityId     String?         @db.Uuid
+  createdAt      DateTime        @default(now())
+  expiresAt      DateTime
+
+  @@index([expiresAt])
+}
+
+model Challenge {
+  id         String        @id @default(uuid()) @db.Uuid
+  kind       ChallengeKind
+  subject    String // what the challenge is bound to (enrollment id, session id…)
+  data       Json
+  attempts   Int           @default(0)
+  createdAt  DateTime      @default(now())
+  expiresAt  DateTime
+  consumedAt DateTime?
+
+  @@index([kind, subject])
+  @@index([expiresAt])
+}
+
+model RateBucket {
+  key         String
+  windowStart DateTime
+  count       Int      @default(0)
+
+  @@id([key, windowStart])
+}
+
+model SigningKey {
+  kid           String    @id
+  alg           String
+  publicJwk     Json
+  privateSealed Bytes
+  createdAt     DateTime  @default(now())
+  retiredAt     DateTime?
+}
+
+model OidcClient {
+  id            String     @id @default(uuid()) @db.Uuid
+  clientId      String     @unique
+  name          String
+  description   String     @default("")
+  category      String     @default("Service")
+  type          ClientType
+  secretHash    String?
+  redirectUris  String[]
+  allowedScopes String[]
+  sector        String // pairwise subject sector
+  verified      Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+
+  grants Grant[]
+}
+
+model Grant {
+  id         String     @id @default(uuid()) @db.Uuid
+  identity   Identity   @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  identityId String     @db.Uuid
+  client     OidcClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId   String     @db.Uuid
+  scopes     String[]
+  grantedAt  DateTime   @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+
+  codes AuthCode[]
+
+  @@index([identityId])
+  @@index([clientId])
+}
+
+model AuthCode {
+  codeHash      String    @id
+  grant         Grant     @relation(fields: [grantId], references: [id], onDelete: Cascade)
+  grantId       String    @db.Uuid
+  redirectUri   String
+  scopes        String[]
+  nonce         String?
+  codeChallenge String
+  authTime      DateTime
+  amr           String[]
+  expiresAt     DateTime
+  consumedAt    DateTime?
+}
+
+model VerificationPass {
+  id         String    @id @default(uuid()) @db.Uuid
+  identity   Identity  @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  identityId String    @db.Uuid
+  label      String // who the citizen says it is for, e.g. "Upwork"
+  claims     String[]
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  checks     Int       @default(0)
+
+  @@index([identityId])
+}
+
+model AuditEvent {
+  seq        BigInt   @id @default(autoincrement())
+  type       String
+  identityId String?  @db.Uuid
+  clientId   String? // OIDC client_id when a partner is involved
+  detail     Json
+  createdAt  DateTime
+  prevHash   String
+  hash       String   @unique
+
+  @@index([identityId, seq])
+  @@index([type])
+}
+
+// ---------------------------------------------------------------------------
+// Sandbox stand-ins for external systems. Never used when SANDBOX=false.
+// ---------------------------------------------------------------------------
+
+model RegistryPerson {
+  id        String   @id @default(uuid()) @db.Uuid
+  docType   DocType
+  docNumber String
+  fullName  String
+  dob       String // YYYY-MM-DD
+  deceased  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  sims RegistrySim[]
+
+  @@unique([docType, docNumber])
+}
+
+model RegistrySim {
+  msisdn   String         @id
+  owner    RegistryPerson @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId  String         @db.Uuid
+  operator String
+}
+
+model SandboxMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  to        String
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([to, createdAt])
+}

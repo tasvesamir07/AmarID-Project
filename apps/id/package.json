@@ -1,0 +1,49 @@
+{
+  "name": "@amarid/id",
+  "private": true,
+  "version": "2.0.0",
+  "description": "AmarID identity provider and citizen wallet",
+  "scripts": {
+    "predev": "node scripts/copy-models.mjs",
+    "dev": "next dev -p 3000",
+    "prebuild": "node scripts/copy-models.mjs && prisma generate",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/lib/universal-id.test.ts src/server/biometrics/template.test.ts",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy && prisma generate",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "test:e2e": "tsx --env-file=../../.env --test tests/e2e.test.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "@simplewebauthn/browser": "^13.3.0",
+    "@simplewebauthn/server": "^13.3.3",
+    "@vladmandic/human": "^3.3.6",
+    "clsx": "^2.1.1",
+    "dotenv": "^18.0.10",
+    "jose": "^6.2.18",
+    "lucide-react": "^1.79.0",
+    "next": "16.4.6",
+    "pg": "^8.23.1",
+    "qrcode": "^1.5.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/node": "^22.20.5",
+    "@types/pg": "^8.23.1",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "prisma": "7.10.1",
+    "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
+    "typescript": "5.9.3"
+  }
+}

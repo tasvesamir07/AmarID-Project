@@ -1,88 +1,22 @@
-# Dependencies
 node_modules/
-*/node_modules/
-apps/*/node_modules/
-packages/*/node_modules/
-.pnp
-.pnp.js
-
-# Environment & Config
-.env
-.env*
-*.env
-.env.example
-
-# Crypto & Secrets
-*.pem
-*.key
-*.cert
-*.crt
-config/
-
-# Build & Compiler Outputs
-dist/
-apps/*/dist/
-packages/*/dist/
 .next/
-apps/*/.next/
-apps/*/out/
-next-env.d.ts
-apps/*/next-env.d.ts
+dist/
 *.tsbuildinfo
-.turbo/
+next-env.d.ts
 
-# Images & Screenshots (exclude all png/jpg/jpeg/webp)
-*.png
-*.jpg
-*.jpeg
-*.webp
-*.gif
-*.ico
-!apps/web/public/favicon.ico
+# secrets and local state
+.env
+.env.local
+.data/
 
-# Documentation & Spec Markdown (keep only README.md if desired)
-*.md
-!README.md
-docs/
+# generated
+apps/id/src/generated/
+apps/id/public/models/
+apps/id/public/vendor/
 
-# Docker Files (if you don't want Docker configs uploaded)
-Dockerfile*
-docker-compose*.yml
-docker-compose*.yaml
-.dockerignore
-
-# Logs & Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-*.log
-temp_*.log
-
-# Testing & Coverage
-coverage/
-.nyc_output/
-
-# Prisma & Database Locks
-prisma/*.db
-prisma/*.db-journal
-prisma/migrations/*.lock
-
-# OS & Editor Files
-.vscode/
-.idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# OS / editor
 .DS_Store
 Thumbs.db
-desktop.ini
-
-# Temporary files
-tmp/
-temp/
-scratch/
-
-package-lock.json
+.vscode/
+.idea/
+*.log
