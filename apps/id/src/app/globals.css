@@ -62,7 +62,11 @@
     min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
   }
-  /* Bangla script needs more vertical room than Latin at the same size. */
+  /* Bangla letters are denser than Latin ones at the same size, so the whole
+     interface is set slightly larger in Bangla, with more room between lines. */
+  html:lang(bn) {
+    font-size: 106.25%;
+  }
   :lang(bn) body {
     line-height: 1.7;
   }

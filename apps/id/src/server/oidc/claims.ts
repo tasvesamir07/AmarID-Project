@@ -5,6 +5,7 @@ import { formatMsisdn } from "@/lib/validation";
 import { deriveKey } from "../crypto/keys";
 import { openText } from "../crypto/seal";
 import { db } from "../db";
+import { holdsDocument } from "../documents";
 import { env } from "../env";
 import { profileOf, sealContext } from "../identity";
 
@@ -32,6 +33,11 @@ export async function claimsFor(identity: Identity, client: OidcClient, scopes: 
     amarid_unique: true,
     amarid_liveness_date: day(identity.lastLivenessAt),
   };
+
+  // "Holds a verified NID / passport": a yes, released only when it is true.
+  // The document number is not in the database, so it cannot be released.
+  if (scopes.includes("nid") && (await holdsDocument(identity, "NID"))) claims.nid_verified = true;
+  if (scopes.includes("passport") && (await holdsDocument(identity, "PASSPORT"))) claims.passport_verified = true;
 
   if (scopes.includes("age")) claims.age_over_18 = profile.age >= 18; // a yes/no, not the birth date
   // Every AmarID is backed by a Bangladeshi civil record, so this is a fact about

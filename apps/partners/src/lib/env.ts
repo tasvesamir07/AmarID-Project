@@ -29,8 +29,8 @@ export type Tenant = "daraz" | "bkash" | "abroad";
 export const tenants: Record<Tenant, { clientId: string; secret: () => string; scope: string }> = {
   // A shop asks for the minimum: a stable private id and "is this an adult".
   daraz: { clientId: "daraz-demo", secret: () => required("DARAZ_CLIENT_SECRET"), scope: "openid age" },
-  // A financial service must know its customer, so it asks for the verified record.
-  bkash: { clientId: "bkash-demo", secret: () => required("BKASH_CLIENT_SECRET"), scope: "openid profile birthdate phone kyc" },
-  // A service abroad gets facts about the person, never the passport.
-  abroad: { clientId: "globalverify", secret: () => required("GLOBALVERIFY_CLIENT_SECRET"), scope: "openid age nationality profile" },
+  // A financial service must know its customer: it requires a verified NID and asks for the verified record.
+  bkash: { clientId: "bkash-demo", secret: () => required("BKASH_CLIENT_SECRET"), scope: "openid nid profile birthdate phone kyc" },
+  // A service abroad requires a verified passport. It learns that one exists, never its number.
+  abroad: { clientId: "globalverify", secret: () => required("GLOBALVERIFY_CLIENT_SECRET"), scope: "openid passport age nationality profile" },
 };

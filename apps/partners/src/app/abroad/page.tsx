@@ -34,6 +34,7 @@ export default async function AbroadDemo({ searchParams }: { searchParams: Promi
   const nationality = Array.isArray(claims.nationalities) && claims.nationalities.includes("BD") ? "Bangladeshi" : null;
   const facts: { label: string; value: string | null }[] = [
     { label: "Real, unique person", value: claims.amarid_unique === true ? "Confirmed" : null },
+    { label: "Passport", value: claims.passport_verified === true ? "Verified by Bangladesh" : null },
     { label: "Nationality", value: nationality },
     { label: "Aged 18 or over", value: claims.age_over_18 === true ? "Yes" : claims.age_over_18 === false ? "No" : null },
     { label: "Legal name", value: typeof claims.name === "string" ? claims.name : null },
@@ -69,7 +70,7 @@ export default async function AbroadDemo({ searchParams }: { searchParams: Promi
           <>
             <div className="max-w-2xl space-y-2">
               <h1 className="text-3xl font-semibold sm:text-4xl">Confirm your identity</h1>
-              <p className="text-lg text-ink-2">Choose how you want to prove who you are. The university only needs four facts.</p>
+              <p className="text-lg text-ink-2">Choose how you want to prove who you are. The university needs five facts, not your passport.</p>
             </div>
             <div className="grid gap-5 md:grid-cols-2">
               <section aria-labelledby="usual" className="space-y-4 rounded-2xl bg-white p-6 ring-1 ring-line">
@@ -96,7 +97,7 @@ export default async function AbroadDemo({ searchParams }: { searchParams: Promi
                 </div>
                 <p className="text-sm text-ink-2">Bangladesh confirms the facts. Your passport stays with you.</p>
                 <ul className="space-y-2 text-sm">
-                  {["That you are a real, unique person", "Your nationality", "That you are 18 or over", "Your legal name"].map((u) => (
+                  {["That you are a real, unique person", "That you hold a verified passport", "Your nationality", "That you are 18 or over", "Your legal name"].map((u) => (
                     <li key={u} className="flex items-start gap-2.5 text-ink-2"><Check className="mt-0.5 size-4 shrink-0 text-ok" aria-hidden />{u}</li>
                   ))}
                 </ul>

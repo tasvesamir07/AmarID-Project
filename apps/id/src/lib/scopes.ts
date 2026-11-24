@@ -1,7 +1,7 @@
 // What a partner can ask for. Shared by the provider, the consent screen and
 // the partner console, so all three describe a scope the same way.
 
-export const SCOPES = ["openid", "age", "nationality", "profile", "birthdate", "phone", "kyc"] as const;
+export const SCOPES = ["openid", "nid", "passport", "age", "nationality", "profile", "birthdate", "phone", "kyc"] as const;
 export type Scope = (typeof SCOPES)[number];
 
 export type ScopeInfo = {
@@ -13,10 +13,18 @@ export type ScopeInfo = {
   personal: boolean;
   /** Only for partners that are legally required to know their customer. */
   regulated?: boolean;
+  /**
+   * The partner requires the person to hold a verified document of this type.
+   * The person must verify one with AmarID before they can continue; the
+   * partner then learns that it exists, never its number.
+   */
+  document?: "NID" | "PASSPORT";
 };
 
 export const SCOPE_INFO: Record<Scope, ScopeInfo> = {
   openid: { claims: ["sub", "amarid_unique", "amarid_liveness_date"], required: true, personal: false },
+  nid: { claims: ["nid_verified"], required: true, personal: false, document: "NID" },
+  passport: { claims: ["passport_verified"], required: true, personal: false, document: "PASSPORT" },
   age: { claims: ["age_over_18"], personal: false },
   nationality: { claims: ["nationalities"], personal: false },
   profile: { claims: ["name"], personal: true },

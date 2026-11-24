@@ -10,6 +10,10 @@ export const en = {
     home: "Go to home",
     keep: "Keep",
     continue: "Continue",
+    listen: "Listen",
+    stopListening: "Stop",
+    next: "Next",
+    back: "Back",
   },
 
   nav: {
@@ -124,7 +128,7 @@ export const en = {
 
   enroll: {
     progress: "Enrollment progress",
-    haveOne: "I already have an AmarID",
+    haveOne: "Have an ID? Sign in",
     steps: { details: "Your details", code: "Your SIM", face: "Your face", device: "Your device" },
     details: {
       title: "Create your AmarID",
@@ -144,6 +148,16 @@ export const en = {
       consent: "I agree that AmarID may check these details with the civil and SIM registries, and keep them in protected form to operate my identity.",
       consentRequired: "Please tick the box to continue.",
       submit: "Check and send code",
+      part: "Question {n} of {total}",
+      docTitle: "What is your NID number?",
+      passportTitle: "What is your passport number?",
+      docWhere: "The number is printed here on your card.",
+      whoTitle: "Your name and date of birth",
+      whoBody: "Write them exactly as they are on the card.",
+      phoneTitle: "What is your mobile number?",
+      day: "Day",
+      month: "Month",
+      year: "Year",
       help: {
         HOLDER_DECEASED: "An AmarID cannot be issued for this document. If this is wrong, the record must first be corrected at the registry.",
         DOCUMENT_MISMATCH: "Check the spelling of the name and the date of birth against your document.",
@@ -244,6 +258,9 @@ export const en = {
     ENROLLMENT_EXPIRED: "This enrollment has expired. Please start again.",
     ENROLLMENT_WRONG_STEP: "That step is not available right now. Refresh the page.",
     ALREADY_ENROLLED: "This document already has an AmarID.",
+    DOCUMENT_IN_USE: "This document is already linked to another AmarID.",
+    DOCUMENT_ALREADY_ADDED: "You have already verified this document.",
+    DOCUMENT_REQUIRED: "This app needs a document you have not verified yet.",
     DUPLICATE_PERSON: "This person already has an AmarID.",
     LIVENESS_EVIDENCE_INVALID: "The face check did not complete. Please try again.",
     LIVENESS_CHALLENGE_EXPIRED: "The face check took too long. Please try again.",
@@ -271,6 +288,8 @@ export const en = {
 
   scopes: {
     openid: { label: "A private ID for this app", why: "Lets the app recognise you next time. It is different for every app, so apps cannot link you." },
+    nid: { label: "That you have a verified NID", why: "Only a yes. Your NID number stays with AmarID." },
+    passport: { label: "That you have a verified passport", why: "Only a yes. Your passport number stays with AmarID." },
     age: { label: "Whether you are over 18", why: "A yes or no. Your date of birth is not shared." },
     nationality: { label: "Your nationality", why: "Confirms you are a Bangladeshi citizen. No passport or NID number is shared." },
     profile: { label: "Your name", why: "As on your verified document." },
@@ -292,7 +311,7 @@ export const en = {
     continue: "Continue",
     cancel: "Cancel",
     revokeNote: "You can remove this access at any time from your wallet.",
-    values: { openid: "ID {id} · real, unique person: Yes", age: "Over 18: {answer}", nationality: "Bangladeshi", kyc: "Name, date of birth, nationality — verified" },
+    values: { openid: "ID {id} · real person: Yes", nid: "Verified NID: Yes", passport: "Verified passport: Yes", age: "Over 18: {answer}", nationality: "Bangladeshi", kyc: "Name, date of birth, nationality — verified" },
     signInFor: "Signing in to {partner}",
     confirmTitle: "Confirm it is you",
     confirmBody: "This app asks for a fresh sign-in. Use your passkey to continue.",
@@ -302,6 +321,20 @@ export const en = {
     dormantBody: "Your AmarID is dormant because its yearly face check is overdue. Renew it to continue to {partner}.",
     refusedTitle: "This sign-in link was refused",
     refusedBody: "It does not come from an application registered with AmarID, so we did not send you anywhere. If you followed a link from a message, it may be a scam.",
+  },
+
+  docs: {
+    title: "Your verified documents",
+    body: "An app can learn that you have one. The number never leaves AmarID.",
+    NID: "NID",
+    PASSPORT: "passport",
+    verifiedOn: "Verified on {date}",
+    notAdded: "Not verified yet",
+    add: "Add",
+    neededTitle: "{partner} needs a verified {doc}",
+    neededBody: "You opened your AmarID with your {have}. Verify your {doc} here once and it works everywhere. {partner} will only learn that you have one, never the number.",
+    match: "The name and date of birth on it must match your AmarID.",
+    submit: "Verify my {doc}",
   },
 
   wallet: {
@@ -351,7 +384,7 @@ export const en = {
     forWhomPlaceholder: "For example, a freelancing site",
     whatToProve: "What should it prove?",
     claims: {
-      real_person: { label: "I am a real, unique person", hint: "Verified by a live face check; one person, one AmarID." },
+      real_person: { label: "I am a real person, not a fake account", hint: "Verified by a live face check; one person, one AmarID." },
       age_over_18: { label: "I am over 18", hint: "A yes or no. Not your date of birth." },
       bangladesh_id_holder: { label: "I hold a verified Bangladeshi ID", hint: "Confirms the check was done. Not the number." },
       recently_verified: { label: "I was seen alive this year", hint: "Your last face check was within twelve months." },
@@ -391,6 +424,7 @@ export const en = {
       "auth.signed_in": "Signed in to AmarID {extra}",
       "auth.signed_out": "Signed out",
       "auth.recovered": "Identity confirmed with SIM code and face",
+      "document.added": "You verified one more document",
       "passkey.added": "Passkey added",
       "passkey.revoked": "Passkey removed",
       "consent.granted": "You allowed {partner} to receive",
@@ -464,7 +498,7 @@ export const en = {
     ctaSecondary: "I already have one",
     pillars: ["One person, one ID", "No document photos shared", "You approve every share"],
     sampleFacts: [
-      { label: "Real, unique person", value: "Yes" },
+      { label: "Real person", value: "Yes" },
       { label: "Over 18", value: "Yes" },
     ],
     sampleNot: "Not shared: NID number, date of birth, photo.",
@@ -477,10 +511,10 @@ export const en = {
     howTitle: "Verify once. Then just be you.",
     howBody: "Enrollment takes about three minutes on your own phone.",
     steps: [
-      { title: "Verify once", body: "Your NID or passport, a SIM in your own name, and a live face check." },
-      { title: "Get your one ID", body: "A face can hold only one AmarID, so a second document or SIM cannot create a second you." },
-      { title: "Sign in with a touch", body: "Your fingerprint unlocks a passkey on your phone. Nothing to remember, nothing to phish." },
-      { title: "Share only what is asked", body: "You see each request and approve it. Apps get a yes or no — not your documents." },
+      { title: "Give your NID and SIM number", body: "Your NID or passport number, and a SIM bought in your own name." },
+      { title: "Show your face", body: "The camera checks it is really you. One person cannot open two IDs." },
+      { title: "Turn on your phone lock", body: "Sign in with what already opens your phone. No password to remember." },
+      { title: "See the request, then allow", body: "You see what an app asks for. It gets it only if you agree." },
     ],
     compareTitle: "What a shop needs to know about you is very little.",
     compareBody: "It needs to know you are one real adult. It does not need a copy of your identity.",
@@ -490,7 +524,7 @@ export const en = {
     },
     withAmarid: {
       title: "With AmarID",
-      items: ["Real, unique person: Yes", "Over 18: Yes", "A private ID that only this shop sees", "Nothing else — and you can take it back"],
+      items: ["Real person: Yes", "Over 18: Yes", "A private ID that only this shop sees", "Nothing else — and you can take it back"],
     },
     trustTitle: "Built so that we cannot misuse it either.",
     trustBody: "Privacy here is not a promise in a policy. It is how the data is stored.",

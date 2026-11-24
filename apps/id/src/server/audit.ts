@@ -21,6 +21,7 @@ export type AuditType =
   | "auth.signed_in"
   | "auth.signed_out"
   | "auth.recovered"
+  | "document.added"
   | "passkey.added"
   | "passkey.revoked"
   | "consent.granted"

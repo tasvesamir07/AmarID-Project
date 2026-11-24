@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { jwtVerify } from "jose";
 import type { Grant, OidcClient } from "@/generated/prisma/client";
-import { isScope, parseScopes, SCOPES, type Scope } from "@/lib/scopes";
+import { SCOPE_INFO, isScope, parseScopes, SCOPES, type Scope } from "@/lib/scopes";
+import { holdsDocument } from "../documents";
 import { auditIn } from "../audit";
 import { randomToken, safeEqual, sha256 } from "../crypto/tokens";
 import { db } from "../db";
@@ -44,7 +45,7 @@ export function discoveryDocument() {
     id_token_signing_alg_values_supported: ["ES256"],
     token_endpoint_auth_methods_supported: ["client_secret_basic", "client_secret_post", "none"],
     code_challenge_methods_supported: ["S256"],
-    claims_supported: ["sub", "iss", "aud", "exp", "iat", "auth_time", "nonce", "acr", "amr", "amarid_unique", "amarid_liveness_date", "age_over_18", "nationalities", "name", "birthdate", "phone_number", "phone_number_verified", "verified_claims"],
+    claims_supported: ["sub", "iss", "aud", "exp", "iat", "auth_time", "nonce", "acr", "amr", "amarid_unique", "amarid_liveness_date", "nid_verified", "passport_verified", "age_over_18", "nationalities", "name", "birthdate", "phone_number", "phone_number_verified", "verified_claims"],
     acr_values_supported: ["urn:amarid:loa:high"],
     prompt_values_supported: ["login", "consent"],
   };
@@ -171,6 +172,17 @@ export function grantCovers(grant: Grant | null, scopes: Scope[]): boolean {
  */
 export async function decideAuthorization(pending: PendingAuthorization, auth: Authenticated, decision: { approve: boolean; scopes: Scope[] }): Promise<string> {
   const { request, client } = pending;
+
+  // A partner that requires a document gets nothing until the person holds it.
+  // Checked before the request is consumed, so the person can verify the
+  // document and then approve this same request.
+  if (decision.approve) {
+    for (const scope of request.scopes) {
+      const document = SCOPE_INFO[scope].document;
+      if (document && !(await holdsDocument(auth.identity, document))) throw new AppError("DOCUMENT_REQUIRED", 409, undefined, { document });
+    }
+  }
+
   const claimed = await db.challenge.updateMany({ where: { id: pending.requestId, consumedAt: null }, data: { consumedAt: new Date() } });
   if (claimed.count !== 1) throw new AppError("AUTHORIZATION_EXPIRED", 410);
 
@@ -180,8 +192,9 @@ export async function decideAuthorization(pending: PendingAuthorization, auth: A
   if (auth.identity.status !== "ACTIVE") throw new AppError("IDENTITY_NOT_ACTIVE", 403);
   if (!sessionIsFreshEnough(pending, auth)) throw new AppError("REAUTHENTICATION_REQUIRED", 401);
 
-  // The person may approve fewer scopes than requested, never more.
-  const approved = request.scopes.filter((s) => s === "openid" || decision.scopes.includes(s));
+  // The person may approve fewer scopes than requested, never more. Required
+  // scopes are part of the request itself: the choice there is allow or cancel.
+  const approved = request.scopes.filter((s) => SCOPE_INFO[s].required || decision.scopes.includes(s));
   const code = randomToken();
 
   await db.$transaction(async (tx) => {

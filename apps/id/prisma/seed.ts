@@ -31,7 +31,8 @@ async function main() {
       secret: secret("BKASH_CLIENT_SECRET"),
       redirectUris: [`${partners}/bkash/callback`],
       // A financial service is legally required to know its customer.
-      allowedScopes: ["openid", "age", "profile", "birthdate", "phone", "kyc"],
+      // It also requires a verified NID, and learns only that one exists.
+      allowedScopes: ["openid", "nid", "age", "profile", "birthdate", "phone", "kyc"],
     },
     {
       clientId: "globalverify",
@@ -41,7 +42,8 @@ async function main() {
       secret: secret("GLOBALVERIFY_CLIENT_SECRET"),
       redirectUris: [`${partners}/abroad/callback`],
       // A foreign service gets facts, never the passport itself.
-      allowedScopes: ["openid", "age", "nationality", "profile"],
+      // A service abroad requires a verified passport, and never sees it.
+      allowedScopes: ["openid", "passport", "age", "nationality", "profile"],
     },
   ];
   // Partners from earlier versions of the demo.

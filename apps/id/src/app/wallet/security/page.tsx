@@ -3,20 +3,32 @@ import Link from "next/link";
 import { Badge, ButtonLink, Card } from "@/components/ui";
 import { fmt, formatDate, formatRelative } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
+import { verifiedDocuments } from "@/server/documents";
 import { walletData } from "@/server/me";
 import { requireSession } from "@/server/session";
 import { PageHeading } from "../page-heading";
 import { RemoveButton } from "../remove-button";
 import { AddPasskeyButton } from "./add-passkey";
+import { DocumentsCard } from "./documents-card";
 
 export default async function SecurityPage() {
   const { t, locale } = await getT();
-  const data = await walletData(await requireSession());
+  const auth = await requireSession();
+  const data = await walletData(auth);
   const { profile } = data;
+  const documents = (await verifiedDocuments(auth.identity)).map((d) => ({ docType: d.docType, date: formatDate(d.verifiedAt, locale) }));
 
   return (
     <div className="space-y-8">
       <PageHeading title={t.security.title} body={t.security.body} />
+
+      <section aria-labelledby="documents" className="space-y-3">
+        <div className="space-y-1">
+          <h2 id="documents" className="text-lg font-semibold">{t.docs.title}</h2>
+          <p className="text-sm text-ink-3">{t.docs.body}</p>
+        </div>
+        <DocumentsCard held={documents} />
+      </section>
 
       <section aria-labelledby="passkeys" className="space-y-3">
         <h2 id="passkeys" className="text-lg font-semibold">{t.security.passkeys}</h2>

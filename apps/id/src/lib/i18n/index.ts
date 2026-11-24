@@ -22,7 +22,25 @@ export function formatDate(value: string | Date, locale: Locale): string {
   return new Intl.DateTimeFormat(intlLocale(locale), { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Dhaka" }).format(new Date(value));
 }
 
+/** In Bangla people say "রাত ৮:৪৯", not "৮:৪৯ PM". */
+function banglaDayPart(hour: number): string {
+  if (hour < 4) return "রাত";
+  if (hour < 12) return "সকাল";
+  if (hour < 16) return "দুপুর";
+  if (hour < 18) return "বিকেল";
+  if (hour < 20) return "সন্ধ্যা";
+  return "রাত";
+}
+
 export function formatDateTime(value: string | Date, locale: Locale): string {
+  if (locale === "bn") {
+    const date = new Date(value);
+    const day = new Intl.DateTimeFormat("bn-BD", { day: "numeric", month: "short", timeZone: "Asia/Dhaka" }).format(date);
+    const hour24 = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: "Asia/Dhaka" }).format(date));
+    const minute = new Intl.DateTimeFormat("en-GB", { minute: "2-digit", timeZone: "Asia/Dhaka" }).format(date).padStart(2, "0");
+    const clock = new Intl.NumberFormat("bn-BD").format(hour24 % 12 || 12) + ":" + minute.replace(/d/g, (n) => "০১২৩৪৫৬৭৮৯"[Number(n)]!);
+    return day + ", " + banglaDayPart(hour24) + " " + clock;
+  }
   return new Intl.DateTimeFormat(intlLocale(locale), { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Dhaka" }).format(new Date(value));
 }
 

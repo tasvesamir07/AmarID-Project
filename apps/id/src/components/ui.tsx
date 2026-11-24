@@ -45,7 +45,7 @@ const buttonVariant: Record<Variant, string> = {
 const buttonSize: Record<Size, string> = {
   sm: "h-9 px-3.5 text-sm",
   md: "h-11 px-5 text-[15px]",
-  lg: "h-13 px-6 text-base",
+  lg: "h-14 px-6 text-[17px]",
 };
 
 export function buttonClass(variant: Variant = "primary", size: Size = "md", block = false) {
@@ -122,7 +122,7 @@ export function Notice({ tone = "info", title, children, className }: { tone?: k
 export function Field({ label, hint, error, htmlFor, children }: { label: ReactNode; hint?: ReactNode; error?: ReactNode; htmlFor: string; children: ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="block text-sm font-medium text-ink">
+      <label htmlFor={htmlFor} className="block text-[15px] font-medium text-ink">
         {label}
       </label>
       {children}

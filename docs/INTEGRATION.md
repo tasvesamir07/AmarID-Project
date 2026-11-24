@@ -17,6 +17,8 @@ The demo partners in `apps/partners` do this with `openid-client` in about fifty
 | Scope | Claims released | Notes |
 |---|---|---|
 | `openid` | `sub`, `amarid_unique`, `amarid_liveness_date` | Required. `sub` is a different private ID for every partner. |
+| `nid` | `nid_verified` | Required document. The person must hold a verified NID; the partner learns only that one exists. |
+| `passport` | `passport_verified` | Required document. Same, for a passport. |
 | `age` | `age_over_18` | A yes or no. The date of birth is not released. |
 | `nationality` | `nationalities` | `["BD"]`. No passport or NID number is released. |
 | `profile` | `name` | As on the verified document. |
@@ -27,6 +29,14 @@ The demo partners in `apps/partners` do this with `openid-client` in about fifty
 A partner can request only the scopes it was registered with. A request for more is refused before the person sees anything.
 
 No scope releases a document number, a document image, a face image, a face template, a fingerprint or the Universal ID.
+
+## Required documents
+
+A partner that needs a particular document requests the `nid` or `passport` scope. These scopes cannot be switched off on the consent screen: the person either allows the request or cancels it.
+
+If the person has not verified that document yet (for example they opened their AmarID with an NID and a service abroad requires a passport), AmarID asks for the document number during sign-in, checks it against the civil registry under the same name and date of birth, and then continues. The document is verified once and works for every partner afterwards.
+
+The partner receives `nid_verified: true` or `passport_verified: true`. It never receives the number: AmarID does not store it, only a keyed index that stops one document being attached to two people.
 
 ## Pairwise subjects
 

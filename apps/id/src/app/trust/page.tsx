@@ -20,7 +20,7 @@ const stored: [string, ReactNode, string][] = [
 
 const partnerGets: [string, string][] = [
   ["A private ID", "Different for every partner. Two partners cannot link you by comparing records, and none learns your Universal ID."],
-  ["Yes/no facts", "“Real unique person”, “over 18”. A shop does not receive your birth date to learn that you are an adult."],
+  ["Yes/no facts", "“Real person”, “over 18”. A shop does not receive your birth date to learn that you are an adult."],
   ["Attributes you approve", "Name, birth date, phone or a verified KYC record — only for the scopes you switch on, and only regulated partners may ask for the sensitive ones."],
   ["Never", "Your document number, your document image, your face, your Universal ID."],
 ];

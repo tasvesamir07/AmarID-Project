@@ -151,7 +151,7 @@ async function token(client: { id: string; secret: string; redirect: string }, c
 }
 
 const bazar = { id: "daraz-demo", secret: BAZAR_SECRET, redirect: `${PARTNERS}/daraz/callback`, scope: "openid age profile" };
-const bank = { id: "bkash-demo", secret: BANK_SECRET, redirect: `${PARTNERS}/bkash/callback`, scope: "openid profile birthdate phone kyc" };
+const bank = { id: "bkash-demo", secret: BANK_SECRET, redirect: `${PARTNERS}/bkash/callback`, scope: "openid nid profile birthdate phone kyc" };
 
 let alice: Person;
 
@@ -397,12 +397,29 @@ describe("proof of life", () => {
 });
 
 describe("verification abroad", () => {
-  it("releases nationality as a fact, without a birth date, phone or document", async () => {
-    const abroad = { id: "globalverify", secret: process.env.GLOBALVERIFY_CLIENT_SECRET ?? "", redirect: `${PARTNERS}/abroad/callback`, scope: "openid age nationality profile" };
+  it("requires a verified passport, accepts one added later, and never releases its number", async () => {
+    const abroad = { id: "globalverify", secret: process.env.GLOBALVERIFY_CLIENT_SECRET ?? "", redirect: `${PARTNERS}/abroad/callback`, scope: "openid passport age nationality profile" };
+
+    // Alice enrolled with an NID, so a service that requires a passport is refused.
+    const refused = await authorize(alice.browser, abroad);
+    assert.equal(refused.decision.status, 409);
+    assert.equal(refused.decision.json.error.code, "DOCUMENT_REQUIRED");
+
+    // She verifies her passport once, inside AmarID.
+    const passport = `B${String(randomBytes(4).readUInt32BE() % 100_000_000).padStart(8, "0")}`;
+    assert.equal((await alice.browser.post("/api/me/documents", { docType: "PASSPORT", docNumber: "12" })).json.error.code, "DOCUMENT_NUMBER_INVALID");
+    const added = await alice.browser.post("/api/me/documents", { docType: "PASSPORT", docNumber: passport });
+    assert.equal(added.status, 200, JSON.stringify(added.json));
+    assert.equal((await alice.browser.post("/api/me/documents", { docType: "PASSPORT", docNumber: passport })).json.error.code, "DOCUMENT_ALREADY_ADDED");
+    assert.equal((await alice.browser.post("/api/me/documents", { docType: "NID", docNumber: alice.nid })).json.error.code, "DOCUMENT_ALREADY_ADDED");
+
     const flow = await authorize(alice.browser, abroad);
     const tokens = await token(abroad, flow.redirectTo!.searchParams.get("code")!, flow.verifier);
     assert.equal(tokens.status, 200);
     const claims = decodeJwt(tokens.json.id_token);
+    assert.equal(claims.passport_verified, true);
+    assert.equal(claims.nid_verified, undefined, "the NID was not asked for");
+    assert.ok(!JSON.stringify(claims).includes(passport), "the passport number must never be released");
     assert.deepEqual(claims.nationalities, ["BD"]);
     assert.equal(claims.age_over_18, true);
     assert.equal(claims.name, alice.name);

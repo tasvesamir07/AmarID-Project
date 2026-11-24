@@ -1,12 +1,14 @@
-import { ArrowRight, ArrowUpRight, Check, Code2, FileWarning, Fingerprint, Globe2, IdCard, Lock, ShieldCheck, ShoppingBag, ToggleRight, UserCheck, Users, Wallet, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, Code2, FileWarning, Fingerprint, Globe2, Lock, ShieldCheck, ShoppingBag, Users, Wallet, X } from "lucide-react";
 import Link from "next/link";
+import { AllowArt, FaceArt, LockArt, NidArt } from "@/components/illustrations";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { ButtonLink, Logo } from "@/components/ui";
+import { formatNumber } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
 import { env } from "@/server/env";
 
 const problemIcons = [FileWarning, Globe2, Users];
-const stepIcons = [IdCard, UserCheck, Fingerprint, ToggleRight];
+const stepArt = [NidArt, FaceArt, LockArt, AllowArt];
 
 // The demos keep their own colours so each tile is recognisable at a glance.
 const demoStyle = [
@@ -16,7 +18,7 @@ const demoStyle = [
 ];
 
 export default async function LandingPage() {
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const l = t.landing;
   const partners = env().partnersUrl;
 
@@ -97,6 +99,31 @@ export default async function LandingPage() {
           </div>
         </section>
 
+        {/* How it works */}
+        <section id="how" className="mx-auto max-w-6xl scroll-mt-20 space-y-10 px-4 py-16 sm:px-6 sm:py-20">
+          <div className="max-w-2xl space-y-3">
+            <h2 className="text-3xl font-semibold sm:text-4xl">{l.howTitle}</h2>
+            <p className="text-lg text-ink-2">{l.howBody}</p>
+          </div>
+          <ol className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {l.steps.map((s, i) => {
+              const Art = stepArt[i]!;
+              return (
+                <li key={s.title} className="flex flex-col overflow-hidden rounded-3xl bg-surface ring-1 ring-line">
+                  <div className="flex justify-center bg-sunken/70 px-5 py-5"><Art className="h-auto w-full max-w-[13rem]" /></div>
+                  <div className="flex gap-3.5 p-5">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand text-lg font-semibold text-white tabular">{formatNumber(i + 1, locale)}</span>
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-semibold leading-snug">{s.title}</h3>
+                      <p className="text-[15px] text-ink-2">{s.body}</p>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+
         {/* Try it */}
         <section id="demos" className="scroll-mt-20 border-y border-line bg-surface">
           <div className="mx-auto max-w-6xl space-y-8 px-4 py-14 sm:px-6 sm:py-16">
@@ -131,61 +158,6 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* Numbers */}
-        <section aria-label={l.pillars.join(", ")} className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
-          <dl className="grid gap-8 sm:grid-cols-3">
-            {l.numbers.map((n) => (
-              <div key={n.label} className="flex flex-col-reverse gap-1 border-l-2 border-brand pl-5">
-                <dt className="text-ink-2">{n.label}</dt>
-                <dd className="text-5xl font-semibold tracking-tight tabular sm:text-6xl">{n.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-
-        {/* Problem */}
-        <section className="border-y border-line bg-surface/70">
-          <div className="mx-auto max-w-6xl space-y-10 px-4 py-16 sm:px-6 sm:py-20">
-            <h2 className="max-w-2xl text-3xl font-semibold sm:text-4xl">{l.problemTitle}</h2>
-            <div className="grid gap-5 md:grid-cols-3">
-              {l.problems.map((p, i) => {
-                const Icon = problemIcons[i]!;
-                return (
-                  <div key={p.title} className="space-y-3 rounded-3xl bg-paper p-6 ring-1 ring-line">
-                    <span className="grid size-11 place-items-center rounded-xl bg-danger-soft text-danger"><Icon className="size-5" aria-hidden /></span>
-                    <h3 className="text-lg font-semibold">{p.title}</h3>
-                    <p className="text-ink-2">{p.body}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* How it works */}
-        <section id="how" className="mx-auto max-w-6xl scroll-mt-20 space-y-10 px-4 py-16 sm:px-6 sm:py-20">
-          <div className="max-w-2xl space-y-3">
-            <h2 className="text-3xl font-semibold sm:text-4xl">{l.howTitle}</h2>
-            <p className="text-lg text-ink-2">{l.howBody}</p>
-          </div>
-          <ol className="grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
-            {l.steps.map((s, i) => {
-              const Icon = stepIcons[i]!;
-              return (
-                <li key={s.title} className="relative space-y-3">
-                  <div className="flex items-center gap-3">
-                    <span className="grid size-11 shrink-0 place-items-center rounded-full bg-brand text-white"><Icon className="size-5" aria-hidden /></span>
-                    <span aria-hidden className="h-px flex-1 bg-line-strong" />
-                    <span className="font-mono text-sm text-ink-3 tabular">0{i + 1}</span>
-                  </div>
-                  <h3 className="text-lg font-semibold">{s.title}</h3>
-                  <p className="text-[15px] text-ink-2">{s.body}</p>
-                </li>
-              );
-            })}
-          </ol>
-        </section>
-
         {/* Comparison */}
         <section className="bg-brand-deep text-white">
           <div className="mx-auto max-w-6xl space-y-10 px-4 py-16 sm:px-6 sm:py-20">
@@ -216,6 +188,25 @@ export default async function LandingPage() {
                   ))}
                 </ul>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Problem */}
+        <section className="border-y border-line bg-surface/70">
+          <div className="mx-auto max-w-6xl space-y-10 px-4 py-16 sm:px-6 sm:py-20">
+            <h2 className="max-w-2xl text-3xl font-semibold sm:text-4xl">{l.problemTitle}</h2>
+            <div className="grid gap-5 md:grid-cols-3">
+              {l.problems.map((p, i) => {
+                const Icon = problemIcons[i]!;
+                return (
+                  <div key={p.title} className="space-y-3 rounded-3xl bg-paper p-6 ring-1 ring-line">
+                    <span className="grid size-11 place-items-center rounded-xl bg-danger-soft text-danger"><Icon className="size-5" aria-hidden /></span>
+                    <h3 className="text-lg font-semibold">{p.title}</h3>
+                    <p className="text-ink-2">{p.body}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>

@@ -194,6 +194,10 @@ export default async function BkashDemo({ searchParams }: { searchParams: Promis
                   <dt className="text-sm text-ink-3">KYC assurance</dt>
                   <dd className="text-lg font-medium"><span className="capitalize">{verified.verification?.assurance_level ?? "—"}</span> <span className="text-sm font-normal text-ink-3">({verified.verification?.trust_framework})</span></dd>
                 </div>
+                <div>
+                  <dt className="text-sm text-ink-3">National ID</dt>
+                  <dd className="text-lg font-medium">{account.claims.nid_verified === true ? "Verified" : "—"} <span className="text-sm font-normal text-ink-3">(number not received)</span></dd>
+                </div>
                 <div className="sm:col-span-2">
                   <dt className="text-sm text-ink-3">Evidence checked by AmarID</dt>
                   <dd className="text-sm text-ink-2">{(verified.verification?.evidence ?? []).map((e) => e.record?.type ?? e.method ?? e.type).join(" · ").replaceAll("_", " ") || "—"}</dd>

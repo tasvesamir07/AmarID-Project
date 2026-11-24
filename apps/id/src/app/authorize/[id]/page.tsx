@@ -1,6 +1,7 @@
-import { Clock, ShieldAlert } from "lucide-react";
+import { Clock, IdCard, ShieldAlert } from "lucide-react";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { AddDocument } from "@/components/add-document";
 import { SignInPanel } from "@/components/sign-in-panel";
 import { FlowPage } from "@/components/site-chrome";
 import { ButtonLink } from "@/components/ui";
@@ -8,9 +9,10 @@ import { fmt, formatDate } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
 import { SCOPE_INFO } from "@/lib/scopes";
 import { maskUniversalId } from "@/lib/universal-id";
+import { holdsDocument } from "@/server/documents";
 import { profileOf } from "@/server/identity";
 import { claimsFor } from "@/server/oidc/claims";
-import { activeGrant, grantCovers, loadAuthorization, sessionIsFreshEnough } from "@/server/oidc/provider";
+import { activeGrant, grantCovers, loadAuthorization, redirectWith, sessionIsFreshEnough } from "@/server/oidc/provider";
 import { getSession } from "@/server/session";
 import { ConsentForm, type ConsentItem } from "./consent-form";
 
@@ -71,6 +73,27 @@ export default async function AuthorizePage({ params }: { params: Promise<{ id: 
     );
   }
 
+  // The partner requires a document this person has not verified yet: ask for
+  // it here, then carry on with the same sign-in.
+  for (const scope of request.scopes) {
+    const needed = SCOPE_INFO[scope].document;
+    if (!needed || (await holdsDocument(auth.identity, needed))) continue;
+    const names = { partner: client.name, doc: t.docs[needed], have: t.docs[auth.identity.docType] };
+    return (
+      <FlowPage>
+        <div className="animate-rise space-y-6 pt-4">
+          <span className="grid size-14 place-items-center rounded-2xl bg-warn-soft text-warn"><IdCard className="size-7" aria-hidden /></span>
+          <div className="space-y-2">
+            <h1 className="text-[1.7rem] font-semibold leading-tight">{fmt(t.docs.neededTitle, names)}</h1>
+            <p className="text-ink-2">{fmt(t.docs.neededBody, names)}</p>
+          </div>
+          <AddDocument docType={needed} />
+          <ButtonLink href={redirectWith(request.redirectUri, { error: "access_denied", state: request.state })} variant="ghost" block size="lg">{t.consent.cancel}</ButtonLink>
+        </div>
+      </FlowPage>
+    );
+  }
+
   const profile = profileOf(auth.identity);
   const claims = await claimsFor(auth.identity, client, request.scopes);
   const grant = await activeGrant(auth.identity.id, client);
@@ -79,6 +102,8 @@ export default async function AuthorizePage({ params }: { params: Promise<{ id: 
   const valueOf: Record<string, string> = {
     openid: fmt(t.consent.values.openid, { id: `${String(claims.sub).slice(0, 8)}…` }),
     age: fmt(t.consent.values.age, { answer: yesNo(claims.age_over_18) }),
+    nid: t.consent.values.nid,
+    passport: t.consent.values.passport,
     nationality: t.consent.values.nationality,
     profile: profile.name,
     birthdate: formatDate(`${profile.dob}T00:00:00+06:00`, locale),
