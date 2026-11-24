@@ -79,6 +79,7 @@ export default async function AuthorizePage({ params }: { params: Promise<{ id: 
   const valueOf: Record<string, string> = {
     openid: fmt(t.consent.values.openid, { id: `${String(claims.sub).slice(0, 8)}…` }),
     age: fmt(t.consent.values.age, { answer: yesNo(claims.age_over_18) }),
+    nationality: t.consent.values.nationality,
     profile: profile.name,
     birthdate: formatDate(`${profile.dob}T00:00:00+06:00`, locale),
     phone: String(claims.phone_number ?? ""),

@@ -132,7 +132,7 @@ export function EnrollFlow({ initial, sandbox, partnersUrl }: { initial: Enrollm
           <Notice tone="info" title={t.enroll.done.keepTitle}>{t.enroll.done.keepBody}</Notice>
           <div className="flex flex-col gap-3">
             <ButtonLink href="/wallet" size="lg">{t.enroll.done.openWallet}</ButtonLink>
-            <a href={`${partnersUrl}/bazar`} className="text-center text-sm font-medium text-brand underline-offset-4 hover:underline">
+            <a href={`${partnersUrl}/`} className="text-center text-sm font-medium text-brand underline-offset-4 hover:underline">
               {t.enroll.done.tryPartner}
             </a>
           </div>

@@ -34,6 +34,10 @@ export async function claimsFor(identity: Identity, client: OidcClient, scopes: 
   };
 
   if (scopes.includes("age")) claims.age_over_18 = profile.age >= 18; // a yes/no, not the birth date
+  // Every AmarID is backed by a Bangladeshi civil record, so this is a fact about
+  // the scheme, not a lookup: it lets a foreign service confirm nationality
+  // without seeing a passport.
+  if (scopes.includes("nationality")) claims.nationalities = ["BD"];
   if (scopes.includes("profile")) claims.name = profile.name;
   if (scopes.includes("birthdate")) claims.birthdate = profile.dob;
 

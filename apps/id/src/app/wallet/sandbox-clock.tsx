@@ -33,9 +33,11 @@ export function SandboxClock({ partnersUrl }: { partnersUrl: string }) {
       </div>
       <p className="text-sm text-ink-2">
         {t.sandbox.partnersBody}{" "}
-        <a href={`${partnersUrl}/bazar`} className="font-medium text-brand underline-offset-4 hover:underline">Bazar Local</a>
+        <a href={`${partnersUrl}/daraz`} className="font-medium text-brand underline-offset-4 hover:underline">Daraz (demo)</a>
         {" · "}
-        <a href={`${partnersUrl}/bank`} className="font-medium text-brand underline-offset-4 hover:underline">Probashi Bank</a>
+        <a href={`${partnersUrl}/bkash`} className="font-medium text-brand underline-offset-4 hover:underline">bKash (demo)</a>
+        {" · "}
+        <a href={`${partnersUrl}/abroad`} className="font-medium text-brand underline-offset-4 hover:underline">GlobalVerify</a>
       </p>
     </Card>
   );

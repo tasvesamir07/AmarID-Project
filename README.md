@@ -24,10 +24,11 @@ npm run dev
 | | |
 |---|---|
 | Identity provider and citizen wallet | http://localhost:3000 |
-| Demo partners (Bazar Local, Probashi Bank) | http://localhost:3001 |
+| Partner demos (mobile wallet, marketplace, verification abroad) | http://localhost:3001 |
+| MCP server for AI agents | http://localhost:3000/api/mcp |
 | Operator console | http://localhost:3000/admin (token: `ADMIN_TOKEN` in `.env`) |
 
-`npm run dev` creates `.env` with fresh random secrets, starts PostgreSQL (data in `.data/`), applies migrations, seeds the two demo partners, and runs both apps. Prefer Docker for the database? `docker compose up -d` gives the same database on the same port.
+`npm run dev` creates `.env` with fresh random secrets, starts PostgreSQL (data in `.data/`), applies migrations, seeds the three demo partners, and runs both apps. Prefer Docker for the database? `docker compose up -d` gives the same database on the same port.
 
 You need a camera for enrollment: the face check is real.
 
@@ -35,10 +36,11 @@ You need a camera for enrollment: the face check is real.
 
 1. **Enroll** at `/enroll`. Any well-formed NID and mobile number work in the sandbox; the one-time code appears in the on-screen "sandbox phone". Pass the face check and create a passkey.
 2. **Try to enroll again** with a *different* NID and phone number. The face check recognises you and blocks the second identity.
-3. **Bazar Local** (`:3001/bazar`): claim the coupon with two different phone numbers — it works twice. Then use *Continue with AmarID* — it works once, whatever number you use.
-4. **Probashi Bank** (`:3001/bank`): open an account. The bank receives a signed, verified record; the page shows everything it received and that the ID it got differs from Bazar Local's.
-5. **Wallet** (`/wallet`): remove an app's access, create a verification pass and open its link in a private window, read the activity log.
-6. **Proof of life**: in the wallet's sandbox tools, let 13 months pass. The identity turns dormant and partner sign-in stops until you pass a new face check.
+3. **Marketplace demo** (`:3001/daraz`): collect the new-user voucher with two different phone numbers — it works twice. Then use *Continue with AmarID* — it works once, whatever number you use.
+4. **Mobile wallet demo** (`:3001/bkash`): open an account. The wallet receives a signed, verified record; the page shows everything it received and that the ID it got differs from the marketplace's.
+5. **Verification abroad** (`:3001/abroad`): prove your nationality, age and name to a service overseas. No passport or document number leaves AmarID.
+6. **Wallet** (`/wallet`): remove an app's access, create a verification pass and open its link in a private window, read the activity log.
+7. **Proof of life**: in the wallet's sandbox tools, let 13 months pass. The identity turns dormant and partner sign-in stops until you pass a new face check.
 
 Sandbox test data: NID `1000000001` belongs to a person recorded as deceased; SIM `01700000002` is registered to someone else.
 
@@ -50,9 +52,10 @@ apps/id         The identity provider and citizen wallet (Next.js, PostgreSQL)
   src/app         Pages and thin route handlers
   src/lib         Code shared with the browser: validation, liveness protocol, i18n
   tests           End-to-end tests over HTTP with a software passkey authenticator
-apps/partners   Two demo relying parties. They share no code with the provider and
-                integrate through a certified OpenID Connect client library.
-docs            Architecture and security notes
+apps/partners   Three concept demos (a mobile wallet, a marketplace, a verification
+                service abroad). They share no code with the provider and integrate
+                through a certified OpenID Connect client library.
+docs            Architecture, security, integration and deployment notes
 ```
 
 Design decisions worth knowing:

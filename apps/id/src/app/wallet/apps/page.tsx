@@ -22,7 +22,7 @@ export default async function AppsPage() {
           <p className="text-sm text-ink-3">{t.apps.emptyBody}</p>
           {env().sandbox && (
             <p className="text-sm">
-              <a href={`${env().partnersUrl}/bazar`} className="font-medium text-brand underline-offset-4 hover:underline">{t.apps.tryDemo}</a>
+              <a href={`${env().partnersUrl}/`} className="font-medium text-brand underline-offset-4 hover:underline">{t.apps.tryDemo}</a>
             </p>
           )}
         </Card>

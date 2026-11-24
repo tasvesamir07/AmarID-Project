@@ -1,4 +1,4 @@
-// Seeds what a fresh sandbox needs: the two demo partners and a few civil
+// Seeds what a fresh sandbox needs: the three demo partners and a few civil
 // registry test records. Safe to run repeatedly.
 import { sha256 } from "../src/server/crypto/tokens";
 import { db } from "../src/server/db";
@@ -6,32 +6,46 @@ import { env } from "../src/server/env";
 
 async function main() {
   const partners = env().partnersUrl;
-  const bazarSecret = process.env.BAZAR_CLIENT_SECRET;
-  const bankSecret = process.env.BANK_CLIENT_SECRET;
-  if (!bazarSecret || !bankSecret) throw new Error("BAZAR_CLIENT_SECRET and BANK_CLIENT_SECRET must be set (run `npm run dev` once to generate .env)");
+  const secret = (name: string) => {
+    const value = process.env[name];
+    if (!value) throw new Error(`${name} must be set (run \`npm run dev\` once to generate .env)`);
+    return value;
+  };
 
   const clients = [
     {
-      clientId: "bazar-local",
-      name: "Bazar Local",
+      clientId: "daraz-demo",
+      name: "Daraz (demo)",
       description: "Online marketplace",
       category: "Shopping",
-      secret: bazarSecret,
-      redirectUris: [`${partners}/bazar/callback`],
+      secret: secret("DARAZ_CLIENT_SECRET"),
+      redirectUris: [`${partners}/daraz/callback`],
       // A shop needs to know you are one real adult. It does not need your birth date or phone.
       allowedScopes: ["openid", "age", "profile"],
     },
     {
-      clientId: "probashi-bank",
-      name: "Probashi Bank",
-      description: "Licensed bank — account opening",
-      category: "Banking",
-      secret: bankSecret,
-      redirectUris: [`${partners}/bank/callback`],
-      // A bank is legally required to know its customer.
+      clientId: "bkash-demo",
+      name: "bKash (demo)",
+      description: "Mobile financial service — account opening",
+      category: "Mobile banking",
+      secret: secret("BKASH_CLIENT_SECRET"),
+      redirectUris: [`${partners}/bkash/callback`],
+      // A financial service is legally required to know its customer.
       allowedScopes: ["openid", "age", "profile", "birthdate", "phone", "kyc"],
     },
+    {
+      clientId: "globalverify",
+      name: "GlobalVerify",
+      description: "Identity checks for employers and universities abroad",
+      category: "Verification abroad",
+      secret: secret("GLOBALVERIFY_CLIENT_SECRET"),
+      redirectUris: [`${partners}/abroad/callback`],
+      // A foreign service gets facts, never the passport itself.
+      allowedScopes: ["openid", "age", "nationality", "profile"],
+    },
   ];
+  // Partners from earlier versions of the demo.
+  await db.oidcClient.deleteMany({ where: { clientId: { in: ["bazar-local", "probashi-bank"] }, grants: { none: {} } } }).catch(() => undefined);
   for (const c of clients) {
     const data = {
       name: c.name,

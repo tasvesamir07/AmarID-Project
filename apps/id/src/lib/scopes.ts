@@ -1,7 +1,7 @@
 // What a partner can ask for. Shared by the provider, the consent screen and
 // the partner console, so all three describe a scope the same way.
 
-export const SCOPES = ["openid", "age", "profile", "birthdate", "phone", "kyc"] as const;
+export const SCOPES = ["openid", "age", "nationality", "profile", "birthdate", "phone", "kyc"] as const;
 export type Scope = (typeof SCOPES)[number];
 
 export type ScopeInfo = {
@@ -18,6 +18,7 @@ export type ScopeInfo = {
 export const SCOPE_INFO: Record<Scope, ScopeInfo> = {
   openid: { claims: ["sub", "amarid_unique", "amarid_liveness_date"], required: true, personal: false },
   age: { claims: ["age_over_18"], personal: false },
+  nationality: { claims: ["nationalities"], personal: false },
   profile: { claims: ["name"], personal: true },
   birthdate: { claims: ["birthdate"], personal: true, regulated: true },
   phone: { claims: ["phone_number", "phone_number_verified"], personal: true, regulated: true },

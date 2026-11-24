@@ -24,11 +24,13 @@ export const env = {
   },
 };
 
-export type Tenant = "bazar" | "bank";
+export type Tenant = "daraz" | "bkash" | "abroad";
 
 export const tenants: Record<Tenant, { clientId: string; secret: () => string; scope: string }> = {
   // A shop asks for the minimum: a stable private id and "is this an adult".
-  bazar: { clientId: "bazar-local", secret: () => required("BAZAR_CLIENT_SECRET"), scope: "openid age" },
-  // A bank must know its customer, so it asks for the verified record.
-  bank: { clientId: "probashi-bank", secret: () => required("BANK_CLIENT_SECRET"), scope: "openid profile birthdate phone kyc" },
+  daraz: { clientId: "daraz-demo", secret: () => required("DARAZ_CLIENT_SECRET"), scope: "openid age" },
+  // A financial service must know its customer, so it asks for the verified record.
+  bkash: { clientId: "bkash-demo", secret: () => required("BKASH_CLIENT_SECRET"), scope: "openid profile birthdate phone kyc" },
+  // A service abroad gets facts about the person, never the passport.
+  abroad: { clientId: "globalverify", secret: () => required("GLOBALVERIFY_CLIENT_SECRET"), scope: "openid age nationality profile" },
 };

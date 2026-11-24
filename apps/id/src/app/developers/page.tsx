@@ -117,7 +117,7 @@ const claims = tokens.claims();
 
         <Section id="register" title="Get a client">
           <p className="text-ink-2">
-            In this sandbox, clients are registered in the <a href="/admin" className="font-medium text-brand underline-offset-4 hover:underline">operator console</a>. The client secret is shown once and stored only as a hash. The two demo partners in the repository (<code className="font-mono text-sm">apps/partners</code>) are complete, runnable integrations to copy from.
+            In this sandbox, clients are registered in the <a href="/admin" className="font-medium text-brand underline-offset-4 hover:underline">operator console</a>. The client secret is shown once and stored only as a hash. The three demo partners in the repository (<code className="font-mono text-sm">apps/partners</code>) are complete, runnable integrations to copy from. AI coding assistants can read this guide through the MCP server at <code className="font-mono text-sm">/api/mcp</code>.
           </p>
         </Section>
       </main>

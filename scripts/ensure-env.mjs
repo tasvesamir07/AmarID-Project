@@ -11,8 +11,9 @@ const envPath = join(root, ".env");
 const generators = {
   AMARID_MASTER_KEY: () => randomBytes(32).toString("hex"),
   ADMIN_TOKEN: () => randomBytes(12).toString("base64url"),
-  BAZAR_CLIENT_SECRET: () => randomBytes(24).toString("base64url"),
-  BANK_CLIENT_SECRET: () => randomBytes(24).toString("base64url"),
+  DARAZ_CLIENT_SECRET: () => randomBytes(24).toString("base64url"),
+  BKASH_CLIENT_SECRET: () => randomBytes(24).toString("base64url"),
+  GLOBALVERIFY_CLIENT_SECRET: () => randomBytes(24).toString("base64url"),
   PARTNERS_SESSION_SECRET: () => randomBytes(32).toString("hex"),
 };
 
@@ -29,6 +30,14 @@ export function ensureEnv() {
       }
       return line;
     });
+  // Keys added to .env.example after this .env was first written.
+  const present = new Set(lines.map((line) => /^([A-Z_]+)=/.exec(line)?.[1]).filter(Boolean));
+  for (const [key, generate] of Object.entries(generators)) {
+    if (!present.has(key)) {
+      lines.push(`${key}=${generate()}`);
+      changed = true;
+    }
+  }
   if (changed) {
     writeFileSync(envPath, lines.join("\n"));
     console.log("Wrote .env with generated secrets");

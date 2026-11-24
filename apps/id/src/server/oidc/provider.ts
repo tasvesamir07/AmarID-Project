@@ -44,7 +44,7 @@ export function discoveryDocument() {
     id_token_signing_alg_values_supported: ["ES256"],
     token_endpoint_auth_methods_supported: ["client_secret_basic", "client_secret_post", "none"],
     code_challenge_methods_supported: ["S256"],
-    claims_supported: ["sub", "iss", "aud", "exp", "iat", "auth_time", "nonce", "acr", "amr", "amarid_unique", "amarid_liveness_date", "age_over_18", "name", "birthdate", "phone_number", "phone_number_verified", "verified_claims"],
+    claims_supported: ["sub", "iss", "aud", "exp", "iat", "auth_time", "nonce", "acr", "amr", "amarid_unique", "amarid_liveness_date", "age_over_18", "nationalities", "name", "birthdate", "phone_number", "phone_number_verified", "verified_claims"],
     acr_values_supported: ["urn:amarid:loa:high"],
     prompt_values_supported: ["login", "consent"],
   };

@@ -13,8 +13,8 @@ import { VirtualAuthenticator } from "./virtual-authenticator";
 
 const BASE = process.env.APP_URL ?? "http://localhost:3000";
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? "";
-const BAZAR_SECRET = process.env.BAZAR_CLIENT_SECRET ?? "";
-const BANK_SECRET = process.env.BANK_CLIENT_SECRET ?? "";
+const BAZAR_SECRET = process.env.DARAZ_CLIENT_SECRET ?? "";
+const BANK_SECRET = process.env.BKASH_CLIENT_SECRET ?? "";
 const PARTNERS = process.env.PARTNERS_URL ?? "http://localhost:3001";
 
 /** A browser-like client: cookie jar, same-origin headers, its own network address. */
@@ -150,8 +150,8 @@ async function token(client: { id: string; secret: string; redirect: string }, c
   return { status: res.status, json: (await res.json()) as any };
 }
 
-const bazar = { id: "bazar-local", secret: BAZAR_SECRET, redirect: `${PARTNERS}/bazar/callback`, scope: "openid age profile" };
-const bank = { id: "probashi-bank", secret: BANK_SECRET, redirect: `${PARTNERS}/bank/callback`, scope: "openid profile birthdate phone kyc" };
+const bazar = { id: "daraz-demo", secret: BAZAR_SECRET, redirect: `${PARTNERS}/daraz/callback`, scope: "openid age profile" };
+const bank = { id: "bkash-demo", secret: BANK_SECRET, redirect: `${PARTNERS}/bkash/callback`, scope: "openid profile birthdate phone kyc" };
 
 let alice: Person;
 
@@ -351,7 +351,7 @@ describe("OpenID Connect", () => {
     const call = () => fetch(`${BASE}/oauth/userinfo`, { headers: { Authorization: `Bearer ${tokens.json.access_token}` } });
     assert.equal((await call()).status, 200);
     const me = await alice.browser.get("/api/me");
-    const grant = me.json.grants.find((g: any) => g.name === "Probashi Bank");
+    const grant = me.json.grants.find((g: any) => g.name === "bKash (demo)");
     assert.equal((await alice.browser.del(`/api/me/grants/${grant.id}`)).status, 200);
     assert.equal((await call()).status, 401);
   });
@@ -393,6 +393,71 @@ describe("proof of life", () => {
     assert.equal((await liveness(bob.browser, "/api/me/liveness", bob.face)).status, 200);
     assert.equal((await bob.browser.get("/api/me")).json.profile.status, "ACTIVE");
     assert.ok((await authorize(bob.browser, bazar)).redirectTo!.searchParams.get("code"));
+  });
+});
+
+describe("verification abroad", () => {
+  it("releases nationality as a fact, without a birth date, phone or document", async () => {
+    const abroad = { id: "globalverify", secret: process.env.GLOBALVERIFY_CLIENT_SECRET ?? "", redirect: `${PARTNERS}/abroad/callback`, scope: "openid age nationality profile" };
+    const flow = await authorize(alice.browser, abroad);
+    const tokens = await token(abroad, flow.redirectTo!.searchParams.get("code")!, flow.verifier);
+    assert.equal(tokens.status, 200);
+    const claims = decodeJwt(tokens.json.id_token);
+    assert.deepEqual(claims.nationalities, ["BD"]);
+    assert.equal(claims.age_over_18, true);
+    assert.equal(claims.name, alice.name);
+    for (const absent of ["birthdate", "phone_number", "verified_claims"]) assert.equal(claims[absent], undefined);
+    assert.ok(!JSON.stringify(claims).includes(alice.nid));
+  });
+});
+
+describe("MCP server", () => {
+  const rpc = async (method: string, params?: unknown, id: number | null = 1) => {
+    const res = await fetch(`${BASE}/api/mcp`, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+      body: JSON.stringify({ jsonrpc: "2.0", ...(id === null ? {} : { id }), method, ...(params ? { params } : {}) }),
+    });
+    return { status: res.status, json: res.status === 202 ? null : ((await res.json()) as any) };
+  };
+
+  it("initialises, accepts notifications and lists read-only tools", async () => {
+    const init = await rpc("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "e2e", version: "1" } });
+    assert.equal(init.json.result.protocolVersion, "2025-06-18");
+    assert.equal(init.json.result.serverInfo.name, "amarid");
+    assert.equal((await rpc("notifications/initialized", undefined, null)).status, 202);
+    const list = await rpc("tools/list");
+    const names = list.json.result.tools.map((t: any) => t.name).sort();
+    assert.deepEqual(names, ["get_openid_configuration", "list_scopes", "search_docs", "verify_pass"]);
+    for (const tool of list.json.result.tools) assert.equal(tool.annotations.readOnlyHint, true);
+  });
+
+  it("answers documentation questions and reports bad input as a tool error", async () => {
+    const hit = await rpc("tools/call", { name: "search_docs", arguments: { query: "how long does an authorization code live" } });
+    assert.equal(hit.json.result.isError, false);
+    assert.match(JSON.stringify(hit.json.result.structuredContent.passages), /60 seconds/);
+    const bad = await rpc("tools/call", { name: "search_docs", arguments: {} });
+    assert.equal(bad.json.result.isError, true);
+    assert.equal((await rpc("tools/call", { name: "no_such_tool" })).json.error.code, -32602);
+    assert.equal((await rpc("no/such/method")).json.error.code, -32601);
+  });
+
+  it("checks a verification pass and cannot be used to look up a person", async () => {
+    const created = await alice.browser.post("/api/me/passes", { label: "MCP test", claims: ["real_person", "age_over_18"], minutes: 15 });
+    assert.equal(created.status, 200);
+    const good = await rpc("tools/call", { name: "verify_pass", arguments: { token: created.json.token } });
+    assert.equal(good.json.result.structuredContent.valid, true);
+    assert.equal(good.json.result.structuredContent.facts.real_person, true);
+    const text = JSON.stringify(good.json);
+    for (const secret of [alice.name, alice.nid, alice.universalId]) assert.ok(!text.includes(secret));
+    const forged = await rpc("tools/call", { name: "verify_pass", arguments: { token: `${created.json.token.slice(0, -6)}AAAAAA` } });
+    assert.equal(forged.json.result.structuredContent.valid, false);
+  });
+
+  it("reports health", async () => {
+    const res = await fetch(`${BASE}/api/health`);
+    assert.equal(res.status, 200);
+    assert.equal(((await res.json()) as any).status, "ok");
   });
 });
 

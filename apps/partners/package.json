@@ -2,7 +2,7 @@
   "name": "@amarid/partners",
   "private": true,
   "version": "2.0.0",
-  "description": "Demo relying parties (Bazar Local shop, Probashi Bank) that integrate AmarID over standard OpenID Connect",
+  "description": "Concept demo relying parties (a mobile wallet, a marketplace and a verification service abroad) that integrate AmarID over standard OpenID Connect",
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",

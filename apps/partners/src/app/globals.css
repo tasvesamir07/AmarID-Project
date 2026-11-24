@@ -1,27 +1,37 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-latin), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-latin), var(--font-bangla), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-code), ui-monospace, monospace;
 
-  /* Bazar Local — a warm marketplace */
-  --color-bazar: #c2410c;
-  --color-bazar-strong: #9a3412;
-  --color-bazar-soft: #ffedd5;
-  --color-bazar-paper: #fffaf3;
+  /* Mobile wallet demo */
+  --color-wallet: #e2136e;
+  --color-wallet-strong: #b80d58;
+  --color-wallet-soft: #fde7f0;
+  --color-wallet-paper: #fff7fa;
 
-  /* Probashi Bank — a sober bank */
-  --color-bank: #1e3a5f;
-  --color-bank-strong: #152a45;
-  --color-bank-soft: #e6edf5;
-  --color-bank-paper: #f5f7fa;
+  /* Marketplace demo */
+  --color-shop: #f85606;
+  --color-shop-strong: #b93d00;
+  --color-shop-soft: #ffeadd;
+  --color-shop-paper: #f5f5f5;
+  --color-shop-navy: #0f136d;
+
+  /* Verification abroad demo */
+  --color-gv: #2a3fd4;
+  --color-gv-strong: #1c2ba3;
+  --color-gv-soft: #e8ebff;
+  --color-gv-paper: #f6f7fc;
+  --color-gv-ink: #0c1230;
 
   --color-ink: #1a1a1a;
   --color-ink-2: #444;
-  --color-ink-3: #6b6b6b;
-  --color-line: #e5e2da;
+  --color-ink-3: #666;
+  --color-line: #e5e5e5;
   --color-amarid: #0a6847;
   --color-amarid-strong: #07503a;
+  --color-amarid-soft: #e2f1ea;
+  --color-amarid-paper: #f3f9f6;
   --color-ok: #166534;
   --color-ok-soft: #dcfce7;
   --color-bad: #a8231c;
@@ -35,6 +45,28 @@
     min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3 { letter-spacing: -0.02em; text-wrap: balance; }
-  :focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 6px; }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

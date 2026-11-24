@@ -2,15 +2,17 @@
 // clears them. Nothing here is AmarID data.
 
 type Store = {
-  /** Bazar: coupon claims keyed the old way, by phone number. */
-  couponByPhone: Map<string, number>;
-  /** Bazar: coupon claims keyed by the AmarID pairwise subject. */
-  couponBySub: Map<string, number>;
-  /** Bank: accounts keyed by the AmarID pairwise subject. */
-  bankAccounts: Map<string, { number: string; openedAt: number; seconds: number }>;
+  /** Shop: voucher claims keyed the old way, by phone number. */
+  voucherByPhone: Map<string, number>;
+  /** Shop: voucher claims keyed by the AmarID pairwise subject. */
+  voucherBySub: Map<string, number>;
+  /** Wallet: accounts keyed by the AmarID pairwise subject. */
+  walletAccounts: Map<string, { openedAt: number; seconds: number }>;
+  /** Verification abroad: completed checks keyed by the AmarID pairwise subject. */
+  checks: Map<string, { reference: string; at: number; seconds: number }>;
 };
 
-const g = globalThis as unknown as { partnerStore?: Store };
-export const store: Store = (g.partnerStore ??= { couponByPhone: new Map(), couponBySub: new Map(), bankAccounts: new Map() });
+const g = globalThis as unknown as { partnerStore2?: Store };
+export const store: Store = (g.partnerStore2 ??= { voucherByPhone: new Map(), voucherBySub: new Map(), walletAccounts: new Map(), checks: new Map() });
 
-export const COUPON = { code: "WELCOME200", amount: 200 };
+export const VOUCHER = { code: "NEWUSER200", amount: 200 };
